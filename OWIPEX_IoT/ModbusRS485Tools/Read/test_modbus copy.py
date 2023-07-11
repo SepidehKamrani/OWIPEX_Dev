@@ -13,7 +13,6 @@
 # Two sensors are connected to the same port, and their temperature values, as well as another value, are read.
 
 from modbus_lib import DeviceManager
-from time import sleep
 
 # Create DeviceManager
 dev_manager = DeviceManager(port='/dev/ttymxc3', baudrate=9600, parity='N', stopbits=1, bytesize=8, timeout=1)
@@ -26,17 +25,15 @@ dev_manager.add_device(device_id=0x02)
 PH_Sensor = dev_manager.get_device(device_id=0x01)
 Trub_Sensor = dev_manager.get_device(device_id=0x02)
 
-try:
-    # Start auto read
-    PH_Sensor.auto_read_registers(start_address=0x0003, register_count=2)
-    Trub_Sensor.auto_read_registers(start_address=0x0003, register_count=2)
+# Read temperatures
+tempPHSens = PH_Sensor.read_register(start_address=0x0003, register_count=2)
+tempTruebSens = Trub_Sensor.read_register(start_address=0x0003, register_count=2)
+#print(f'Temperature 1: {temp1}, Temperature 2: {temp2}')
 
-    # Sleep for 10 seconds
-    sleep(10)
+# Read other values
+PH = PH_Sensor.read_register(start_address=0x0001, register_count=2)
+Treub = Trub_Sensor.read_register(start_address=0x0001, register_count=2)
+#print(f'Other Value 1: {other_value1}, Other Value 2: {other_value2}')
 
-    # Stop auto read
-    PH_Sensor.stop_auto_read()
-    Trub_Sensor.stop_auto_read()
-
-except Exception as e:
-    print(f"An error occurred: {e}")
+# To stop auto read
+# dev_manager.auto_read = False

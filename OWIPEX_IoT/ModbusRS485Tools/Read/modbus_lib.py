@@ -20,18 +20,23 @@ class ModbusClient:
     def __init__(self, device_manager, device_id):
         self.device_manager = device_manager
         self.device_id = device_id
+        self.auto_read_enabled = False
 
     def read_register(self, start_address, register_count, data_format='>f'):
         return self.device_manager.read_register(self.device_id, start_address, register_count, data_format)
 
     def auto_read_registers(self, start_address, register_count, data_format='>f', interval=1):
+        self.auto_read_enabled = True
         def read_loop():
-            while self.device_manager.auto_read:
+            while self.auto_read_enabled:
                 value = self.read_register(start_address, register_count, data_format)
                 print(f'Auto Read: {value}')
                 sleep(interval)
 
         Thread(target=read_loop).start()
+
+    def stop_auto_read(self):
+        self.auto_read_enabled = False
 
 
 class DeviceManager:
@@ -45,7 +50,6 @@ class DeviceManager:
             timeout=timeout
         )
         self.devices = {}
-        self.auto_read = True
 
     def add_device(self, device_id):
         self.devices[device_id] = ModbusClient(self, device_id)
@@ -73,5 +77,8 @@ class DeviceManager:
         data = response[3:-2]
         swapped_data = data[2:4] + data[0:2]
         floating_point = struct.unpack(data_format, swapped_data)[0]
+
+        if floating_point is None:
+            raise Exception(f'Error reading register from device {device_id}')
 
         return floating_point

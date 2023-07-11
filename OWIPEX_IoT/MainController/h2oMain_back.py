@@ -119,7 +119,7 @@ def get_data():
         'boot_time': boot_time,
         'avg_load': avg_load,
         
-        #device PH Sens
+        #device
         'calculatedFlowRate_telem': calculatedFlowRate_telem,
         'alarmActive_telem': alarmActive_telem,
         'waterLevelHeight_telem': waterLevelHeight_telem,
@@ -142,6 +142,8 @@ def main():
     client.request_attributes(shared_keys=['length', 'width', 'height', 'maximumFillHeight', 'outletDiameter', 'outletHeight', 'minimumPHValue', 'maximumPHValue', 'measuredPHValue', 'PHValueOffset', 'measuredTurbidity', 'maximumTurbidity', 'turbiditySensorActive', 'turbidityOffset', 'waterLevelHeight', 'alarmActiveMachine', 'alarmMessageMachine', 'resetAlarm', 'totalVolume', 'tankVolumeToOutlet', 'tankVolumeToMaxAllowedFill', 'calculatedFlowRate', 'powerSwitch', 'automaticSwitch'], callback=attribute_callback)
     
     # Subscribe to individual attributes
+
+    #Machine
     client.subscribe_to_attribute('length', attribute_callback)
     client.subscribe_to_attribute('width', attribute_callback)
     client.subscribe_to_attribute('height', attribute_callback)
@@ -151,19 +153,24 @@ def main():
     client.subscribe_to_attribute('tankVolumeToOutlet', attribute_callback)
     client.subscribe_to_attribute('tankVolumeToMaxAllowedFill', attribute_callback)
     client.subscribe_to_attribute('calculatedFlowRate', attribute_callback)
+    
+    #PH 
     client.subscribe_to_attribute('minimumPHValue', attribute_callback)
     client.subscribe_to_attribute('maximumPHValue', attribute_callback)
-    client.subscribe_to_attribute('measuredPHValue', attribute_callback)
+    #client.subscribe_to_attribute('measuredPHValue', attribute_callback)
     client.subscribe_to_attribute('PHValueOffset', attribute_callback)
+    #Trubidity
     client.subscribe_to_attribute('measuredTurbidity', attribute_callback)
     client.subscribe_to_attribute('maximumTurbidity', attribute_callback)
     client.subscribe_to_attribute('turbiditySensorActive', attribute_callback)
     client.subscribe_to_attribute('turbidityOffset', attribute_callback)
+    #Radar
     client.subscribe_to_attribute('waterLevelHeight', attribute_callback)
     client.subscribe_to_attribute('alarmActiveMachine', attribute_callback)
     client.subscribe_to_attribute('alarmMessageMachine', attribute_callback)
     client.subscribe_to_attribute('resetAlarm', attribute_callback)
     client.subscribe_to_attribute('totalVolume', attribute_callback)
+    #switches
     client.subscribe_to_attribute('powerSwitch', attribute_callback)
     client.subscribe_to_attribute('automaticSwitch', attribute_callback)
     
