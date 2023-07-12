@@ -25,12 +25,12 @@ client = None
 
 # Global Variables
 #Machine 
-length = ""
-width = ""
-height = ""
-maximumFillHeight = ""
+length = 6.0
+width = 2.8
+height = 2.5
+maximumFillHeight = 2,3
 outletDiameter = ""
-outletHeight = ""
+outletHeight = 1.6
 totalVolume = 1.0
 tankVolumeToOutlet = ""
 tankVolumeToMaxAllowedFill = ""
@@ -55,6 +55,11 @@ waterLevelHeight = ""
 alarmActiveMachine = ""
 alarmMessage = ""
 resetAlarm = ""
+#GPS
+gpsTimestamp = ""
+gpsLatitude = ""
+gpsLongitude = ""
+gpsHeight = ""
 
 
 
@@ -64,31 +69,42 @@ def attribute_callback(result, _):
     global length, width, height, maximumFillHeight, outletDiameter, outletHeight, minimumPHValue, maximumPHValue, PHValueOffset, maximumTurbidity, turbiditySensorActive, turbidityOffset, alarmActiveMachine, alarmMessageMachine, resetAlarm, powerSwitch, autoSwitch, callGpsSwitch
     print(result)
     #machine
-    length = result.get('length', "")
-    width = result.get('width', "")
-    height = result.get('height', "")
-    maximumFillHeight = result.get('maximumFillHeight', "")
-    outletDiameter = result.get('outletDiameter', "")
-    outletHeight = result.get('outletHeight', "")
+    if 'length' in result:
+        length = result['length']
+    if 'width' in result:
+        width = result['width']
+    if 'height' in result:
+        height = result['height']
+    if 'maximumFillHeight' in result:
+        maximumFillHeight = result['maximumFillHeight']
+    if 'outletDiameter' in result:
+        outletDiameter = result['outletDiameter']
+    if 'outletHeight' in result:
+        outletHeight = result['outletHeight']
     if 'powerSwitch' in result:
         powerSwitch = result['powerSwitch']
     if 'autoSwitch' in result:
         autoSwitch = result['autoSwitch']
     if 'callGpsSwitch' in result:
-        callGpsSwitch = result['callGpsSwitch']        
-
-    #PH
-    minimumPHValue = result.get('minimumPHValue', "")
-    maximumPHValue = result.get('maximuPHValue', "")
-    PHValueOffset = result.get('PHValueOffset', "")
-    #Tuerb
-    maximumTurbidity = result.get('maximumTurbidity', "")
-    turbiditySensorActive = result.get('turbiditySensorActive', "")
-    turbidityOffset = result.get('turbidityOffset', "")
-    #Alarm
-    alarmActiveMachine = result.get('alarmActiveMachine', "")
-    alarmMessageMachine = result.get('alarmMessageMachine', "")
-    resetAlarm = result.get('resetAlarm', "")
+        callGpsSwitch = result['callGpsSwitch']
+    if 'minimumPHValue' in result:
+        minimumPHValue = result['minimumPHValue']
+    if 'maximumPHValue' in result:
+        maximumPHValue = result['maximumPHValue']
+    if 'PHValueOffset' in result:
+        PHValueOffset = result['PHValueOffset']
+    if 'maximumTurbidity' in result:
+        maximumTurbidity = result['maximumTurbidity']
+    if 'turbiditySensorActive' in result:
+        turbiditySensorActive = result['turbiditySensorActive']
+    if 'turbidityOffset' in result:
+        turbidityOffset = result['turbidityOffset']
+    if 'alarmActiveMachine' in result:
+        alarmActiveMachine = result['alarmActiveMachine']
+    if 'alarmMessageMachine' in result:
+        alarmMessageMachine = result['alarmMessageMachine']
+    if 'resetAlarm' in result:
+        resetAlarm = result['resetAlarm']
     
 
 # Callback function that will be called when an RPC request is received
@@ -103,7 +119,7 @@ def rpc_callback(id, request_body):
         print('Unknown method: ' + method)
 
 def get_data():
-    global temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, totalVolume
+    global temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, totalVolume, gpsTimestamp, gpsLatitude, gpsLongitude, gpsHeight, totalVolume, tankVolumeToOutlet, tankVolumeToMaxAllowedFill
     cpu_usage = round(float(os.popen('''grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage }' ''').readline().replace('\n', '').replace(',', '.')), 2)
     ip_address = os.popen('''hostname -I''').readline().replace('\n', '').replace(',', '.')[:-1]
     mac_address = os.popen('''cat /sys/class/net/*/address''').readline().replace('\n', '').replace(',', '.')
@@ -120,6 +136,11 @@ def get_data():
     alarmActive_telem = False
     waterLevelHeight_telem = random.uniform(180, 200)
     alarmOverfill_telem = False
+
+    #calculate tank volumes
+    totalVolume = length * width * height
+    tankVolumeToOutlet = length * width * outletHeight
+    tankVolumeToMaxAllowedFill = length * width * maximumFillHeight
 
     attributes = {
         'ip_address': ip_address,
@@ -139,13 +160,17 @@ def get_data():
         'calculatedFlowRate_telem': calculatedFlowRate_telem,
         'alarmActive_telem': alarmActive_telem,
         'waterLevelHeight_telem': waterLevelHeight_telem,
-        #'turbiditySensorActive_tele': turbiditySensorActive_telem,
         'measuredTurbidity_telem': measuredTurbidity_telem,
         'measuredPHValue_telem': measuredPHValue_telem,
         'alarmOverfill_telem': alarmOverfill_telem,
         'temperaturPHSens_telem': temperaturPHSens_telem,
-        # Add totalVolume to telemetry
-        'totalVolume': totalVolume
+        'totalVolume': totalVolume,
+        'gpsTimestamp': gpsTimestamp,
+        'gpsLatitude': gpsLatitude,
+        'gpsLongitude': gpsLongitude,
+        'gpsHeight': gpsHeight,
+        'tankVolumeToOutlet': tankVolumeToOutlet,
+        'tankVolumeToMaxAllowedFill': tankVolumeToMaxAllowedFill
 
     }
     print(attributes, telemetry)
@@ -153,7 +178,7 @@ def get_data():
 
 def main():
     #def Global Variables for Main Funktion
-    global client, temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem #callGpsSwitch, powerSwitch, autoSwitch
+    global client, temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, gpsTimestamp, gpsLatitude, gpsLongitude, gpsHeight 
     client = TBDeviceMqttClient(THINGSBOARD_SERVER, THINGSBOARD_PORT, ACCESS_TOKEN)
     client.connect()
     
@@ -202,6 +227,10 @@ def main():
             timestamp, latitude, longitude, altitude = gpsDataLib.fetch_and_process_gps_data(timeout=10)
 
             if timestamp is not None:
+                gpsTimestamp = timestamp
+                gpsLatitude = latitude
+                gpsLongitude = longitude
+                gpsHeight = altitude
                 # Ausgabe der GPS-Daten für Debugging-Zwecke
                 print(f"Zeitstempel: {timestamp}")
                 print(f"Breitengrad: {latitude}")
@@ -223,17 +252,18 @@ def main():
             try:
                 # Start auto read
                 # Read temperatures
-                temperaturPHSens_telem = PH_Sensor.read_register(start_address=0x0003, register_count=2)
-                tempTruebSens = Trub_Sensor.read_register(start_address=0x0003, register_count=2)
-                print(f'Temperature 1: {temperaturPHSens_telem}, Temperature 2: {tempTruebSens}', powerSwitch)
-
-                # Read other values
                 measuredPHValue_telem = PH_Sensor.read_register(start_address=0x0001, register_count=2)
-                measuredTurbidity_telem = Trub_Sensor.read_register(start_address=0x0001, register_count=2)
-                print(f'Other Value 1: {measuredPHValue_telem}, Other Value 2: {measuredTurbidity_telem}')
-                # Stop auto read
-                #PH_Sensor.stop_auto_read()
-                #Trub_Sensor.stop_auto_read()                
+                temperaturPHSens_telem = PH_Sensor.read_register(start_address=0x0003, register_count=2)
+                print(f'PH: {measuredPHValue_telem}, Temperature PH Sens: {temperaturPHSens_telem}', powerSwitch)
+
+                if turbiditySensorActive:
+                    # Read other values
+                    measuredTurbidity_telem = Trub_Sensor.read_register(start_address=0x0001, register_count=2)
+                    tempTruebSens = Trub_Sensor.read_register(start_address=0x0003, register_count=2)
+                    print(f'Trueb: {measuredTurbidity_telem}, Trueb Temp Sens: {tempTruebSens}')   
+                else:
+                    print("TruebOFF", turbiditySensorActive)
+
             except Exception as e:
                 print(f"An error occurred: {e}")
             #END RS485 CALL
