@@ -52,6 +52,7 @@ automaticSwitch = ""
 temperaturPHSens_telem = 0
 measuredPHValue_telem = 0
 measuredTurbidity_telem = 0
+callGpsSwitch = True
 
 # Callback function that will be called when the value of our Shared Attribute changes
 def attribute_callback(result, _):
@@ -143,7 +144,7 @@ def get_data():
 
 def main():
     #def Global Variables for Main Funktion
-    global client, temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem
+    global client, temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, callGpsSwitch
     client = TBDeviceMqttClient(THINGSBOARD_SERVER, THINGSBOARD_PORT, ACCESS_TOKEN)
     client.connect()
     
@@ -176,7 +177,21 @@ def main():
     client.subscribe_to_attribute('powerSwitch', attribute_callback)
     client.subscribe_to_attribute('automaticSwitch', attribute_callback)
     
+    #Call GPS Data
+    if callGpsSwitch:
+        # Abrufen und Verarbeiten der GPS-Daten (mit einem Timeout von 10 Sekunden)
+        timestamp, latitude, longitude, altitude = gpsDataLib.fetch_and_process_gps_data(timeout=10)
 
+        if timestamp is not None:
+            # Ausgabe der GPS-Daten für Debugging-Zwecke
+            print(f"Zeitstempel: {timestamp}")
+            print(f"Breitengrad: {latitude}")
+            print(f"Längengrad: {longitude}")
+            print(f"Höhe: {altitude if altitude is not None else 'nicht verfügbar'}")
+        else:
+            print("Keine GPS-Daten verfügbar.")
+    else:
+        print("GPS-Aufruf ist deaktiviert.")
 
     # Now rpc_callback will process rpc requests from the server
     client.set_server_side_rpc_request_handler(rpc_callback)
