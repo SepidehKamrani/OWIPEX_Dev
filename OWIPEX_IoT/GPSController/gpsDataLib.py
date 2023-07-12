@@ -5,46 +5,35 @@
 #
 # License: All Rights Reserved
 #
-# Module: gpsDataLib V0.2
-# Description: Library for handling GPS data fetching and processing
+# Module: GPS Data Library V0.1
+# Description: Library to fetch and process GPS data
 # -----------------------------------------------------------------------------
 
 import gpsd
 import time
 
-def connect_to_gpsd():
-    gpsd.connect()
+# Verbindet mit dem lokalen gpsd
+gpsd.connect()
 
-def get_gps_data(timeout=None):
+def get_gps_data(timeout=10):
     start_time = time.time()
-
-    while True:
+    while time.time() - start_time <= timeout:
         packet = gpsd.get_current()
-        
-        if packet.mode >= 2:  # A 2D fix at least, meaning we have latitude and longitude.
+        if packet.mode >= 2:  # Mode 2 bedeutet 2D-Fix, was mindestens Längen- und Breitengrad bedeutet.
             return packet
-        
-        # If a timeout is set and we've passed that timeout, stop trying to get data.
-        if timeout is not None and time.time() - start_time > timeout:
-            return None
+    return None
 
 def process_gps_data(packet):
     if packet is not None:
-        # Extract the needed data from the packet into specific variables
-        timestamp = packet.time  # Timestamp of the GPS data
-        latitude, longitude = packet.position()  # Latitude and longitude
-
-        # Altitude is only available if a 3D fix is available, so we first check if that is the case.
-        # If a 3D fix is not available, `altitude` is set to `None`.
-        altitude = packet.alt if packet.mode == 3 else None
-
-        # For debugging, we print the values
-        print(f"Zeitstempel: {timestamp}")
-        print(f"Breitengrad: {latitude}")
-        print(f"Längengrad: {longitude}")
-        print(f"Höhe: {altitude if altitude is not None else 'nicht verfügbar'}")
-        
-        # Return the values so they can be used elsewhere in the program
+        timestamp = packet.time  # Zeitstempel der GPS-Daten
+        latitude, longitude = packet.position()  # Breiten- und Längengrad
+        altitude = packet.alt if packet.mode == 3 else None  # Höhe (wenn verfügbar)
         return timestamp, latitude, longitude, altitude
     else:
-        print("Keine GPS-Daten verfügbar.")
+        return None, None, None, None
+
+def fetch_and_process_gps_data(timeout=10):
+    # Abrufen der GPS-Daten
+    gps_packet = get_gps_data(timeout)
+    # Verarbeiten der abgerufenen GPS-Daten und Speichern der Ergebnisse in Variablen
+    return process_gps_data(gps_packet)
