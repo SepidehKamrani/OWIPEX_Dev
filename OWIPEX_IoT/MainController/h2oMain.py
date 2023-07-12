@@ -3,6 +3,7 @@ import time
 import os
 import random
 import gpsDataLib
+import math
 
 from tb_gateway_mqtt import TBDeviceMqttClient
 from modbus_lib import DeviceManager
@@ -25,16 +26,16 @@ client = None
 
 # Global Variables
 #Machine 
-length = 6.0
+length = 4.0
 width = 2.8
 height = 2.5
-maximumFillHeight = 2,3
-outletDiameter = ""
+maximumFillHeight = 2.3
+outletDiameter = 0.05
 outletHeight = 1.6
 totalVolume = 1.0
-tankVolumeToOutlet = ""
-tankVolumeToMaxAllowedFill = ""
-calculatedFlowRate = ""
+tankVolumeToOutlet = 1.0
+tankVolumeToMaxAllowedFill = 1.0
+calculatedFlowRate = 1.0
 powerSwitch = False
 autoSwitch = False
 callGpsSwitch = False
@@ -51,16 +52,30 @@ turbiditySensorActive = ""
 turbidityOffset = ""
 measuredTurbidity_telem = 0
 #Radar
-waterLevelHeight = ""
+waterLevelHeight = 1.0
+waterLevelHeight_telem = 2.0
 alarmActiveMachine = ""
 alarmMessage = ""
 resetAlarm = ""
+
 #GPS
 gpsTimestamp = ""
 gpsLatitude = ""
 gpsLongitude = ""
 gpsHeight = ""
 
+#Flow Calculation
+def calculate_flow_rate(water_level, outlet_height, outlet_diameter):
+    g = 9.81  # gravitational constant, m/s^2
+    r = outlet_diameter / 2  # radius of the outlet
+    A = math.pi * r ** 2  # area of the outlet
+    h = water_level - outlet_height  # height of the water above the outlet
+    v = math.sqrt(2 * g * h)  # velocity
+    Q = A * v  # flow rate
+    print("r: ", r)
+    print("h: ", h)
+    print("Q: ", Q)
+    return Q
 
 
 
@@ -134,7 +149,7 @@ def get_data():
     #device
     calculatedFlowRate_telem = random.uniform(15, 25)
     alarmActive_telem = False
-    waterLevelHeight_telem = random.uniform(180, 200)
+    waterLevelHeight_telem = random.uniform(1.6, 1.8)
     alarmOverfill_telem = False
 
     #calculate tank volumes
@@ -158,6 +173,7 @@ def get_data():
         'avg_load': avg_load,
         #device PH Sens
         'calculatedFlowRate_telem': calculatedFlowRate_telem,
+        'calculatedFlowRate': calculatedFlowRate,
         'alarmActive_telem': alarmActive_telem,
         'waterLevelHeight_telem': waterLevelHeight_telem,
         'measuredTurbidity_telem': measuredTurbidity_telem,
@@ -178,7 +194,7 @@ def get_data():
 
 def main():
     #def Global Variables for Main Funktion
-    global client, temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, gpsTimestamp, gpsLatitude, gpsLongitude, gpsHeight 
+    global client, temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, gpsTimestamp, gpsLatitude, gpsLongitude, gpsHeight, waterLevelHeight_telem, calculatedFlowRate  
     client = TBDeviceMqttClient(THINGSBOARD_SERVER, THINGSBOARD_PORT, ACCESS_TOKEN)
     client.connect()
     
@@ -219,7 +235,10 @@ def main():
         client.send_attributes(attributes)
         client.send_telemetry(telemetry)
         
-
+        # Berechnen der Durchflussrate anhand der Wasserhöhe, Auslaufhöhe und des Auslaufdurchmessers
+        calculatedFlowRate = calculate_flow_rate(waterLevelHeight_telem, outletHeight, outletDiameter)
+        print("calculatedFlowRate: ", calculatedFlowRate)
+        waterLevelHeight_telem = random.uniform(1.6, 1.8)
         #GPS DATA
         #Call GPS Data. Can be called even whitout power Switch. 
         if callGpsSwitch:
@@ -245,6 +264,8 @@ def main():
 
         #Main power switch if
         if powerSwitch:
+
+            
 
             # RS485 get devices and read their registers
             PH_Sensor = dev_manager.get_device(device_id=0x01)
