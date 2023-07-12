@@ -2,6 +2,7 @@ import logging.handlers
 import time
 import os
 import random
+import gpsDataLib
 
 from tb_gateway_mqtt import TBDeviceMqttClient
 from modbus_lib import DeviceManager
@@ -15,12 +16,9 @@ THINGSBOARD_PORT = 1883
 #RS485 Comunication and Devices
 # Create DeviceManager
 dev_manager = DeviceManager(port='/dev/ttymxc3', baudrate=9600, parity='N', stopbits=1, bytesize=8, timeout=1)
-
 # Add devices
 dev_manager.add_device(device_id=0x01)
 dev_manager.add_device(device_id=0x02)
-
-
 
 #logging.basicConfig(level=logging.DEBUG)
 
@@ -112,11 +110,8 @@ def get_data():
     calculatedFlowRate_telem = random.uniform(15, 25)
     alarmActive_telem = False
     waterLevelHeight_telem = random.uniform(180, 200)
-    #turbiditySensorActive_telem = True
     measuredTurbidity_telem = random.uniform(100, 200)
-    #measuredPHValue_telem = random.uniform(5, 7)
     alarmOverfill_telem = False
-    #temperaturPHSens_telem = random.uniform(-5, 20)
 
     attributes = {
         'ip_address': ip_address,
@@ -147,6 +142,7 @@ def get_data():
     return attributes, telemetry
 
 def main():
+    #def Global Variables for Main Funktion
     global client, temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem
     client = TBDeviceMqttClient(THINGSBOARD_SERVER, THINGSBOARD_PORT, ACCESS_TOKEN)
     client.connect()

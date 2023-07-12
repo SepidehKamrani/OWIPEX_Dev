@@ -5,32 +5,46 @@
 #
 # License: All Rights Reserved
 #
-# Module: GPS Data Fetch V0.1
-# Description: Library to fetch GPS data
+# Module: gpsDataLib V0.2
+# Description: Library for handling GPS data fetching and processing
 # -----------------------------------------------------------------------------
 
 import gpsd
+import time
 
-def get_gps_data():
-    # Verbindet mit dem lokalen gpsd
+def connect_to_gpsd():
     gpsd.connect()
 
+def get_gps_data(timeout=None):
+    start_time = time.time()
+
     while True:
-        try:
-            packet = gpsd.get_current()
+        packet = gpsd.get_current()
+        
+        if packet.mode >= 2:  # A 2D fix at least, meaning we have latitude and longitude.
+            return packet
+        
+        # If a timeout is set and we've passed that timeout, stop trying to get data.
+        if timeout is not None and time.time() - start_time > timeout:
+            return None
 
-            if packet.mode >= 2:  # Mode 2 bedeutet 2D-Fix, was mindestens Längen- und Breitengrad bedeutet.
-                print("Zeit: {}".format(packet.time))
-                print("Breitengrad: {}".format(packet.position()[0]))
-                print("Längengrad: {}".format(packet.position()[1]))
-                if packet.mode == 3:  # Mode 3 bedeutet 3D-Fix, was zusätzlich Höhe bedeutet.
-                    print("Höhe: {} m".format(packet.alt))
-                return packet  # GPS-Daten erfolgreich abgerufen, verlassen der Funktion
-            else:
-                print("Kein GPS-Fix verfügbar, versuche es erneut...")
+def process_gps_data(packet):
+    if packet is not None:
+        # Extract the needed data from the packet into specific variables
+        timestamp = packet.time  # Timestamp of the GPS data
+        latitude, longitude = packet.position()  # Latitude and longitude
 
-        except KeyError:
-            pass
-        except KeyboardInterrupt:
-            print("Abbruch durch Benutzer.")
-            break
+        # Altitude is only available if a 3D fix is available, so we first check if that is the case.
+        # If a 3D fix is not available, `altitude` is set to `None`.
+        altitude = packet.alt if packet.mode == 3 else None
+
+        # For debugging, we print the values
+        print(f"Zeitstempel: {timestamp}")
+        print(f"Breitengrad: {latitude}")
+        print(f"Längengrad: {longitude}")
+        print(f"Höhe: {altitude if altitude is not None else 'nicht verfügbar'}")
+        
+        # Return the values so they can be used elsewhere in the program
+        return timestamp, latitude, longitude, altitude
+    else:
+        print("Keine GPS-Daten verfügbar.")

@@ -6,23 +6,31 @@
 # License: All Rights Reserved
 #
 # Module: Main Program V0.1
-# Description: Main program that uses gpsDataLib to fetch GPS data
+# Description: Main program that uses gpsDataLib to fetch GPS data within a given time limit
 # -----------------------------------------------------------------------------
 
 import gpsDataLib
 
-gps_packet = gpsDataLib.get_gps_data()
+# Ruft die GPS-Daten mit einem Timeout von 10 Sekunden ab.
+# Wenn die Daten innerhalb von 10 Sekunden nicht abgerufen werden können, gibt `get_gps_data` `None` zurück.
+gps_packet = gpsDataLib.get_gps_data(10)
 
-# Die gps_packet-Variable enthält nun ein Paket mit GPS-Daten, die aus dem Aufruf von get_gps_data zurückgegeben wurden.
-# Dieses Paket kann mehrere Eigenschaften haben, je nachdem, welche Daten vom GPS-Sensor abgerufen wurden.
+# Überprüft, ob die GPS-Daten erfolgreich abgerufen wurden
+if gps_packet is not None:
+    # Extrahiere die benötigten Daten aus dem Paket in spezifische Variablen
+    timestamp = gps_packet.time  # Zeitstempel der GPS-Daten
+    latitude, longitude = gps_packet.position()  # Breiten- und Längengrad
 
-# gps_packet.time: Das Datum und die Uhrzeit, zu denen die GPS-Daten abgerufen wurden. 
-# Dies ist ein String im ISO 8601-Format, z.B. '2023-07-11T13:18:06.000Z'.
+    # Da die Höhe nur verfügbar ist, wenn ein 3D-Fix vorhanden ist, überprüfen wir zunächst, ob das der Fall ist.
+    # Wenn kein 3D-Fix vorhanden ist, wird `altitude` auf `None` gesetzt.
+    altitude = gps_packet.alt if gps_packet.mode == 3 else None
 
-# gps_packet.position(): Gibt ein Tuple zurück, das den Breiten- und Längengrad der aktuellen Position des GPS-Sensors enthält.
+    # Zum Debugging geben wir die Werte aus
+    print(f"Zeitstempel: {timestamp}")
+    print(f"Breitengrad: {latitude}")
+    print(f"Längengrad: {longitude}")
+    print(f"Höhe: {altitude if altitude is not None else 'nicht verfügbar'}")
+else:
+    print("Keine GPS-Daten verfügbar.")
 
-# gps_packet.alt: Die Höhe über dem Meeresspiegel, gemessen in Metern. 
-# Dies ist nur verfügbar, wenn der GPS-Sensor einen 3D-Fix hat (d.h. gps_packet.mode == 3).
-
-# Hier können Sie die Daten aus `gps_packet` verwenden, wie Sie möchten. 
-# Zum Beispiel könnten Sie sie in einer Datei speichern, auf einem Bildschirm anzeigen oder an eine andere Funktion senden.
+# Nun können Sie die Variablen `timestamp`, `latitude`, `longitude` und `altitude` in Ihrem Code verwenden.
