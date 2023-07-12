@@ -16,7 +16,6 @@ THINGSBOARD_PORT = 1883
 #RS485 Comunication and Devices
 # Create DeviceManager
 dev_manager = DeviceManager(port='/dev/ttymxc3', baudrate=9600, parity='N', stopbits=1, bytesize=8, timeout=1)
-# Add devices
 dev_manager.add_device(device_id=0x01)
 dev_manager.add_device(device_id=0x02)
 
@@ -26,13 +25,13 @@ client = None
 
 # Global Variables
 #Machine 
-length = 6,2
-width = 3,1
-height = 2,5
+length = ""
+width = ""
+height = ""
 maximumFillHeight = ""
 outletDiameter = ""
 outletHeight = ""
-totalVolume = 1,0
+totalVolume = 1.0
 tankVolumeToOutlet = ""
 tankVolumeToMaxAllowedFill = ""
 calculatedFlowRate = ""
@@ -63,30 +62,28 @@ callGpsSwitch = True
 def attribute_callback(result, _):
     global length, width, height, maximumFillHeight, outletDiameter, outletHeight, minimumPHValue, maximumPHValue, PHValueOffset, maximumTurbidity, turbiditySensorActive, turbidityOffset, alarmActiveMachine, alarmMessageMachine, resetAlarm, powerSwitch, automaticSwitch
     print(result)
+    #machine
     length = result.get('length', "")
     width = result.get('width', "")
     height = result.get('height', "")
     maximumFillHeight = result.get('maximumFillHeight', "")
     outletDiameter = result.get('outletDiameter', "")
     outletHeight = result.get('outletHeight', "")
+    powerSwitch = result.get('powerSwitch', "")
+    automaticSwitch = result.get('automaticSwitch', "")
+    #PH
     minimumPHValue = result.get('minimumPHValue', "")
     maximumPHValue = result.get('maximumPHValue', "")
-    #measuredPHValue = result.get('measuredPHValue', "")
     PHValueOffset = result.get('PHValueOffset', "")
-    #measuredTurbidity = result.get('measuredTurbidity', "")
+    #Tuerb
     maximumTurbidity = result.get('maximumTurbidity', "")
     turbiditySensorActive = result.get('turbiditySensorActive', "")
     turbidityOffset = result.get('turbidityOffset', "")
-    #waterLevelHeight = result.get('waterLevelHeight', "")
+    #Alarm
     alarmActiveMachine = result.get('alarmActiveMachine', "")
     alarmMessageMachine = result.get('alarmMessageMachine', "")
     resetAlarm = result.get('resetAlarm', "")
-    #totalVolume = result.get('totalVolume', "")
-    #tankVolumeToOutlet = result.get('tankVolumeToOutlet', "")
-    #tankVolumeToMaxAllowedFill = result.get('tankVolumeToMaxAllowedFill', "")
-    #calculatedFlowRate = result.get('calculatedFlowRate', "")
-    powerSwitch = result.get('powerSwitch', "")
-    automaticSwitch = result.get('automaticSwitch', "")
+    
 
 # Callback function that will be called when an RPC request is received
 def rpc_callback(id, request_body):
@@ -111,14 +108,21 @@ def get_data():
     used = (st.f_blocks - st.f_bfree) * st.f_frsize
     boot_time = os.popen('uptime -p').read()[:-1]
     avg_load = (cpu_usage + ram_usage) / 2
-    totalVolume = flaot(length) * float(height) * float(width)
-
+    
     #device
     calculatedFlowRate_telem = random.uniform(15, 25)
     alarmActive_telem = False
     waterLevelHeight_telem = random.uniform(180, 200)
-    #measuredTurbidity_telem = random.uniform(100, 200)
     alarmOverfill_telem = False
+
+    # Berechnung des Gesamtvolumens
+    try:
+        length = float(length.replace(",", "."))
+        width = float(width.replace(",", "."))
+        height = float(height.replace(",", "."))
+        totalVolume = length * width * height
+    except Exception as e:
+        print(f"Error in calculating totalVolume: {e}")
 
     attributes = {
         'ip_address': ip_address,
@@ -143,7 +147,9 @@ def get_data():
         'measuredTurbidity_telem': measuredTurbidity_telem,
         'measuredPHValue_telem': measuredPHValue_telem,
         'alarmOverfill_telem': alarmOverfill_telem,
-        'temperaturPHSens_telem': temperaturPHSens_telem
+        'temperaturPHSens_telem': temperaturPHSens_telem,
+        # Add totalVolume to telemetry
+        'totalVolume': totalVolume
 
     }
     print(attributes, telemetry)
@@ -151,7 +157,7 @@ def get_data():
 
 def main():
     #def Global Variables for Main Funktion
-    global client, temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, callGpsSwitch, powerSwitch, automaticSwitch, totalVolume
+    global client, temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, callGpsSwitch, powerSwitch, automaticSwitch
     client = TBDeviceMqttClient(THINGSBOARD_SERVER, THINGSBOARD_PORT, ACCESS_TOKEN)
     client.connect()
     
@@ -159,30 +165,28 @@ def main():
     client.request_attributes(shared_keys=['length', 'width', 'height', 'maximumFillHeight', 'outletDiameter', 'outletHeight', 'minimumPHValue', 'maximumPHValue', 'PHValueOffset', 'maximumTurbidity', 'turbiditySensorActive', 'turbidityOffset', 'alarmActiveMachine', 'alarmMessageMachine', 'resetAlarm', 'powerSwitch', 'automaticSwitch'], callback=attribute_callback)
     
     # Subscribe to individual attributes
+    #machine
+    client.subscribe_to_attribute('powerSwitch', attribute_callback)
+    client.subscribe_to_attribute('automaticSwitch', attribute_callback)
     client.subscribe_to_attribute('length', attribute_callback)
     client.subscribe_to_attribute('width', attribute_callback)
     client.subscribe_to_attribute('height', attribute_callback)
     client.subscribe_to_attribute('maximumFillHeight', attribute_callback)
     client.subscribe_to_attribute('outletDiameter', attribute_callback)
     client.subscribe_to_attribute('outletHeight', attribute_callback)
-    client.subscribe_to_attribute('tankVolumeToOutlet', attribute_callback)
-    client.subscribe_to_attribute('tankVolumeToMaxAllowedFill', attribute_callback)
-    #client.subscribe_to_attribute('calculatedFlowRate', attribute_callback)
+    #PH
     client.subscribe_to_attribute('minimumPHValue', attribute_callback)
     client.subscribe_to_attribute('maximumPHValue', attribute_callback)
-    #client.subscribe_to_attribute('measuredPHValue', attribute_callback)
     client.subscribe_to_attribute('PHValueOffset', attribute_callback)
-    client.subscribe_to_attribute('measuredTurbidity', attribute_callback)
+    #Tuerb
     client.subscribe_to_attribute('maximumTurbidity', attribute_callback)
     client.subscribe_to_attribute('turbiditySensorActive', attribute_callback)
     client.subscribe_to_attribute('turbidityOffset', attribute_callback)
-    #client.subscribe_to_attribute('waterLevelHeight', attribute_callback)
+    'Alarm'
     client.subscribe_to_attribute('alarmActiveMachine', attribute_callback)
     client.subscribe_to_attribute('alarmMessageMachine', attribute_callback)
     client.subscribe_to_attribute('resetAlarm', attribute_callback)
-    #client.subscribe_to_attribute('totalVolume', attribute_callback)
-    client.subscribe_to_attribute('powerSwitch', attribute_callback)
-    client.subscribe_to_attribute('automaticSwitch', attribute_callback)
+    
     
 
     # Now rpc_callback will process rpc requests from the server
