@@ -39,4 +39,4 @@ def write_device_id(old_device_id, new_device_id, port='/dev/ttymxc3'):
     print(f'CRC: 0x{received_crc:04x}')
 
 # Usage:
-# write_device_id(0xf6, 0x02)  # Change device id from 246 (0xf6 in hex) to 2 (0x02 in hex)
+write_device_id(0x01, 0x03)  # Change device id from 246 (0xf6 in hex) to 2 (0x02 in hex)

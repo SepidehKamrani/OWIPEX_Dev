@@ -20,10 +20,17 @@ dev_manager = DeviceManager(port='/dev/ttymxc3', baudrate=9600, parity='N', stop
 # Add devices
 dev_manager.add_device(device_id=0x01)
 dev_manager.add_device(device_id=0x02)
+dev_manager.add_device(device_id=0x03)
 
 # Get devices and read their registers
-PH_Sensor = dev_manager.get_device(device_id=0x01)
+Radar_Sensor = dev_manager.get_device(device_id=0x01)
 Trub_Sensor = dev_manager.get_device(device_id=0x02)
+PH_Sensor = dev_manager.get_device(device_id=0x03)
+
+# Read temperatures
+radarSensVal1 = Radar_Sensor.read_register(start_address=0x0000, register_count=2)
+radarSensVal2 = Radar_Sensor.read_register(start_address=0x0002, register_count=2)
+print(f'tempPHSens: {radarSensVal1}, tempTruebSens: {radarSensVal2}')
 
 # Read temperatures
 tempPHSens = PH_Sensor.read_register(start_address=0x0003, register_count=2)
