@@ -61,14 +61,15 @@ measuredTurbidity_telem = 0
 waterLevelHeight = 1.0
 waterLevelHeight_telem = 2.0
 messuredRadar_Air_telem = 1 
-messuredRadar_Liq_telem = 1
 radarSensorActive = False
 radarSensorOffset = 0.0
+radarSensorEmpty = 3.0
+radarSensorDrain = 0.0
 #GPS
-gpsTimestamp = ""
-gpsLatitude = ""
-gpsLongitude = ""
-gpsHeight = ""
+gpsTimestamp = 1.0
+gpsLatitude = 1.0
+gpsLongitude = 1.0
+gpsHeight = 1.0
 #ALARM
 alarmActiveMachine = ""
 alarmMessage = ""
@@ -82,18 +83,20 @@ def calculate_flow_rate(water_level, outlet_height, outlet_diameter):
     r = outlet_diameter / 2  # radius of the outlet
     A = math.pi * r ** 2  # area of the outlet
     h = water_level - outlet_height  # height of the water above the outlet
-    v = math.sqrt(2 * g * h)  # velocity
-    Q = A * v  # flow rate
-    print("r: ", r)
-    print("h: ", h)
-    print("Q: ", Q)
-    return Q
+
+    if h < 0:
+        print("Warning: water level is below outlet height. Setting flow rate to zero.")
+        return 0
+    else:
+        v = math.sqrt(2 * g * h)  # velocity
+        Q = A * v  # flow rate
+        return Q
 
 
 
 # Callback function that will be called when the value of our Shared Attribute changes
 def attribute_callback(result, _):
-    global length, width, height, maximumFillHeight, outletDiameter, outletHeight, minimumPHValue, maximumPHValue, PHValueOffset, maximumTurbidity, turbiditySensorActive, turbidityOffset, radarSensorActive, radarOffset, alarmActiveMachine, alarmMessageMachine, resetAlarm, powerSwitch, autoSwitch, callGpsSwitch
+    global length, width, height, radarSensorEmpty, radarSensorDrain, maximumFillHeight, outletDiameter, outletHeight, minimumPHValue, maximumPHValue, PHValueOffset, maximumTurbidity, turbiditySensorActive, turbidityOffset, radarSensorActive, radarOffset, alarmActiveMachine, alarmMessageMachine, resetAlarm, powerSwitch, autoSwitch, callGpsSwitch
     print(result)
     #machine
     if 'length' in result:
@@ -136,6 +139,11 @@ def attribute_callback(result, _):
         alarmMessageMachine = result['alarmMessageMachine']
     if 'resetAlarm' in result:
         resetAlarm = result['resetAlarm']
+    if 'radarSensorEmpty' in result:
+        radarSensorEmpty = result['radarSensorEmpty']
+    if 'radarSensorDrain' in result:
+        radarSensorDrain = result['radarSensorDrain']    
+         
     
 
 # Callback function that will be called when an RPC request is received
@@ -150,7 +158,7 @@ def rpc_callback(id, request_body):
         print('Unknown method: ' + method)
 
 def get_data():
-    global temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, totalVolume, gpsTimestamp, gpsLatitude, gpsLongitude, gpsHeight, totalVolume, tankVolumeToOutlet, tankVolumeToMaxAllowedFill, messuredRadar_Air_telem, messuredRadar_Liq_telem
+    global temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, totalVolume, gpsTimestamp, gpsLatitude, gpsLongitude, gpsHeight, totalVolume, tankVolumeToOutlet, tankVolumeToMaxAllowedFill, messuredRadar_Air_telem, radarSensorDrain, radarSensorEmpty
     cpu_usage = round(float(os.popen('''grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage }' ''').readline().replace('\n', '').replace(',', '.')), 2)
     ip_address = os.popen('''hostname -I''').readline().replace('\n', '').replace(',', '.')[:-1]
     mac_address = os.popen('''cat /sys/class/net/*/address''').readline().replace('\n', '').replace(',', '.')
@@ -163,9 +171,7 @@ def get_data():
     avg_load = (cpu_usage + ram_usage) / 2
     
     #device
-    calculatedFlowRate_telem = random.uniform(15, 25)
-    alarmActive_telem = False
-    waterLevelHeight_telem = random.uniform(1.6, 1.8)
+    alarmActive_telem = False 
     alarmOverfill_telem = False
 
     #calculate tank volumes
@@ -187,14 +193,12 @@ def get_data():
         'swap_memory_usage': swap_memory_usage,
         'boot_time': boot_time,
         'avg_load': avg_load,
-        #device PH Sens
-        'calculatedFlowRate_telem': calculatedFlowRate_telem,
+        #device 
         'calculatedFlowRate': calculatedFlowRate,
-        'alarmActive_telem': alarmActive_telem,
         'waterLevelHeight_telem': waterLevelHeight_telem,
         'measuredTurbidity_telem': measuredTurbidity_telem,
+        #PH Sens
         'measuredPHValue_telem': measuredPHValue_telem,
-        'alarmOverfill_telem': alarmOverfill_telem,
         'temperaturPHSens_telem': temperaturPHSens_telem,
         'totalVolume': totalVolume,
         'gpsTimestamp': gpsTimestamp,
@@ -203,8 +207,11 @@ def get_data():
         'gpsHeight': gpsHeight,
         'tankVolumeToOutlet': tankVolumeToOutlet,
         'tankVolumeToMaxAllowedFill': tankVolumeToMaxAllowedFill,
-        'messuredRadar_telem': messuredRadar_Air_telem,
-        'messuredRadar_Liq_telem': messuredRadar_Liq_telem
+        'messuredRadar_Air_telem': messuredRadar_Air_telem,
+        #Alarm
+        'alarmActive_telem': alarmActive_telem,
+        'alarmOverfill_telem': alarmOverfill_telem
+        
         
         
 
@@ -214,7 +221,7 @@ def get_data():
 
 def main():
     #def Global Variables for Main Funktion
-    global client, temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, gpsTimestamp, gpsLatitude, gpsLongitude, gpsHeight, waterLevelHeight_telem, calculatedFlowRate, messuredRadar_Air_telem, messuredRadar_Liq_telem  
+    global client, temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, gpsTimestamp, gpsLatitude, gpsLongitude, gpsHeight, waterLevelHeight_telem, calculatedFlowRate, messuredRadar_Air_telem
     client = TBDeviceMqttClient(THINGSBOARD_SERVER, THINGSBOARD_PORT, ACCESS_TOKEN)
     client.connect()
     
@@ -241,6 +248,9 @@ def main():
     client.subscribe_to_attribute('turbidityOffset', attribute_callback)
     #Radar
     client.subscribe_to_attribute('radarSensorActive', attribute_callback)
+    client.subscribe_to_attribute('radarSensorDrain', attribute_callback)
+    client.subscribe_to_attribute('radarSensorEmpty', attribute_callback)
+     
     'Alarm'
     client.subscribe_to_attribute('alarmActiveMachine', attribute_callback)
     client.subscribe_to_attribute('alarmMessageMachine', attribute_callback)
@@ -260,7 +270,7 @@ def main():
         # Berechnen der Durchflussrate anhand der Wasserhöhe, Auslaufhöhe und des Auslaufdurchmessers
         calculatedFlowRate = calculate_flow_rate(waterLevelHeight_telem, outletHeight, outletDiameter)
         print("calculatedFlowRate: ", calculatedFlowRate)
-        waterLevelHeight_telem = random.uniform(1.6, 1.8)
+        waterLevelHeight_telem = radarSensorEmpty - (float(messuredRadar_Air_telem) / 1000)
         #GPS DATA
         #Call GPS Data. Can be called even whitout power Switch. 
         if callGpsSwitch:
@@ -304,9 +314,9 @@ def main():
 
                 if radarSensorActive:
                     # Read other values
-                    messuredRadar_Air_telem = Radar_Sensor.read_radar_sensor(register_address=0x0000)
-                    messuredRadar_Liq_telem = Radar_Sensor.read_radar_sensor(register_address=0x0002)
-                    print(f'Air Height: {messuredRadar_Air_telem} cm, Liquid Level: {messuredRadar_Liq_telem} cm')  
+                    messuredRadar_Air_telem = Radar_Sensor.read_radar_sensor(register_address=0x0001)
+                    #messuredRadar_Liq_telem = Radar_Sensor.read_radar_sensor(register_address=0x0003)
+                    print(f'Radar Messuring Height: {messuredRadar_Air_telem}')
                 else:
                     print("RadarOFF", radarSensorActive)
 
