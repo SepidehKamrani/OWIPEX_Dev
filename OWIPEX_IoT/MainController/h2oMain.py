@@ -89,8 +89,10 @@ def calculate_flow_rate(water_level, outlet_height, outlet_diameter):
         return 0
     else:
         v = math.sqrt(2 * g * h)  # velocity
-        Q = A * v  # flow rate
+        Q = A * v * 3600 # flow rate
         return Q
+    
+
 
 
 
@@ -333,7 +335,7 @@ def main():
                 print("automode OFF", autoSwitch)
         else:
             print("Power Switch OFF.", powerSwitch)
-        time.sleep(5)
+        time.sleep(2)
 
 
 if __name__ == '__main__':
