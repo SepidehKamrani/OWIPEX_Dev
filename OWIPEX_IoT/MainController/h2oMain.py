@@ -19,6 +19,12 @@ THINGSBOARD_PORT = 1883
 dev_manager = DeviceManager(port='/dev/ttymxc3', baudrate=9600, parity='N', stopbits=1, bytesize=8, timeout=1)
 dev_manager.add_device(device_id=0x01)
 dev_manager.add_device(device_id=0x02)
+dev_manager.add_device(device_id=0x03)
+
+# Get devices and read their registers
+Radar_Sensor = dev_manager.get_device(device_id=0x01)
+Trub_Sensor = dev_manager.get_device(device_id=0x02)
+PH_Sensor = dev_manager.get_device(device_id=0x03)
 
 #logging.basicConfig(level=logging.DEBUG)
 
@@ -54,15 +60,21 @@ measuredTurbidity_telem = 0
 #Radar
 waterLevelHeight = 1.0
 waterLevelHeight_telem = 2.0
-alarmActiveMachine = ""
-alarmMessage = ""
-resetAlarm = ""
-
+messuredRadar_Air_telem = 1 
+messuredRadar_Liq_telem = 1
+radarSensorActive = False
+radarSensorOffset = 0.0
 #GPS
 gpsTimestamp = ""
 gpsLatitude = ""
 gpsLongitude = ""
 gpsHeight = ""
+#ALARM
+alarmActiveMachine = ""
+alarmMessage = ""
+resetAlarm = ""
+
+
 
 #Flow Calculation
 def calculate_flow_rate(water_level, outlet_height, outlet_diameter):
@@ -81,7 +93,7 @@ def calculate_flow_rate(water_level, outlet_height, outlet_diameter):
 
 # Callback function that will be called when the value of our Shared Attribute changes
 def attribute_callback(result, _):
-    global length, width, height, maximumFillHeight, outletDiameter, outletHeight, minimumPHValue, maximumPHValue, PHValueOffset, maximumTurbidity, turbiditySensorActive, turbidityOffset, alarmActiveMachine, alarmMessageMachine, resetAlarm, powerSwitch, autoSwitch, callGpsSwitch
+    global length, width, height, maximumFillHeight, outletDiameter, outletHeight, minimumPHValue, maximumPHValue, PHValueOffset, maximumTurbidity, turbiditySensorActive, turbidityOffset, radarSensorActive, radarOffset, alarmActiveMachine, alarmMessageMachine, resetAlarm, powerSwitch, autoSwitch, callGpsSwitch
     print(result)
     #machine
     if 'length' in result:
@@ -114,6 +126,10 @@ def attribute_callback(result, _):
         turbiditySensorActive = result['turbiditySensorActive']
     if 'turbidityOffset' in result:
         turbidityOffset = result['turbidityOffset']
+    if 'radarSensorActive' in result:
+        radarSensorActive = result['radarSensorActive']
+    if 'radarOffset' in result:
+        radarOffset = result['radarOffset']
     if 'alarmActiveMachine' in result:
         alarmActiveMachine = result['alarmActiveMachine']
     if 'alarmMessageMachine' in result:
@@ -134,7 +150,7 @@ def rpc_callback(id, request_body):
         print('Unknown method: ' + method)
 
 def get_data():
-    global temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, totalVolume, gpsTimestamp, gpsLatitude, gpsLongitude, gpsHeight, totalVolume, tankVolumeToOutlet, tankVolumeToMaxAllowedFill
+    global temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, totalVolume, gpsTimestamp, gpsLatitude, gpsLongitude, gpsHeight, totalVolume, tankVolumeToOutlet, tankVolumeToMaxAllowedFill, messuredRadar_Air_telem, messuredRadar_Liq_telem
     cpu_usage = round(float(os.popen('''grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage }' ''').readline().replace('\n', '').replace(',', '.')), 2)
     ip_address = os.popen('''hostname -I''').readline().replace('\n', '').replace(',', '.')[:-1]
     mac_address = os.popen('''cat /sys/class/net/*/address''').readline().replace('\n', '').replace(',', '.')
@@ -186,7 +202,11 @@ def get_data():
         'gpsLongitude': gpsLongitude,
         'gpsHeight': gpsHeight,
         'tankVolumeToOutlet': tankVolumeToOutlet,
-        'tankVolumeToMaxAllowedFill': tankVolumeToMaxAllowedFill
+        'tankVolumeToMaxAllowedFill': tankVolumeToMaxAllowedFill,
+        'messuredRadar_telem': messuredRadar_Air_telem,
+        'messuredRadar_Liq_telem': messuredRadar_Liq_telem
+        
+        
 
     }
     print(attributes, telemetry)
@@ -194,12 +214,12 @@ def get_data():
 
 def main():
     #def Global Variables for Main Funktion
-    global client, temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, gpsTimestamp, gpsLatitude, gpsLongitude, gpsHeight, waterLevelHeight_telem, calculatedFlowRate  
+    global client, temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, gpsTimestamp, gpsLatitude, gpsLongitude, gpsHeight, waterLevelHeight_telem, calculatedFlowRate, messuredRadar_Air_telem, messuredRadar_Liq_telem  
     client = TBDeviceMqttClient(THINGSBOARD_SERVER, THINGSBOARD_PORT, ACCESS_TOKEN)
     client.connect()
     
     # Request shared attributes
-    client.request_attributes(shared_keys=['length', 'width', 'height', 'maximumFillHeight', 'outletDiameter', 'outletHeight', 'minimumPHValue', 'maximumPHValue', 'PHValueOffset', 'maximumTurbidity', 'turbiditySensorActive', 'turbidityOffset', 'alarmActiveMachine', 'alarmMessageMachine', 'resetAlarm', 'powerSwitch', 'autoSwitch', 'callGpsSwitch'], callback=attribute_callback)
+    client.request_attributes(shared_keys=['length', 'width', 'height', 'maximumFillHeight', 'outletDiameter', 'outletHeight', 'minimumPHValue', 'maximumPHValue', 'PHValueOffset', 'maximumTurbidity', 'turbiditySensorActive', 'turbidityOffset', 'radarSensorActive', 'alarmActiveMachine', 'alarmMessageMachine', 'resetAlarm', 'powerSwitch', 'autoSwitch', 'callGpsSwitch'], callback=attribute_callback)
     
     # Subscribe to individual attributes
     #machine
@@ -219,6 +239,8 @@ def main():
     client.subscribe_to_attribute('maximumTurbidity', attribute_callback)
     client.subscribe_to_attribute('turbiditySensorActive', attribute_callback)
     client.subscribe_to_attribute('turbidityOffset', attribute_callback)
+    #Radar
+    client.subscribe_to_attribute('radarSensorActive', attribute_callback)
     'Alarm'
     client.subscribe_to_attribute('alarmActiveMachine', attribute_callback)
     client.subscribe_to_attribute('alarmMessageMachine', attribute_callback)
@@ -265,11 +287,6 @@ def main():
         #Main power switch if
         if powerSwitch:
 
-            
-
-            # RS485 get devices and read their registers
-            PH_Sensor = dev_manager.get_device(device_id=0x01)
-            Trub_Sensor = dev_manager.get_device(device_id=0x02)
             try:
                 # Start auto read
                 # Read temperatures
@@ -284,6 +301,14 @@ def main():
                     print(f'Trueb: {measuredTurbidity_telem}, Trueb Temp Sens: {tempTruebSens}')   
                 else:
                     print("TruebOFF", turbiditySensorActive)
+
+                if radarSensorActive:
+                    # Read other values
+                    messuredRadar_Air_telem = Radar_Sensor.read_radar_sensor(register_address=0x0000)
+                    messuredRadar_Liq_telem = Radar_Sensor.read_radar_sensor(register_address=0x0002)
+                    print(f'Air Height: {messuredRadar_Air_telem} cm, Liquid Level: {messuredRadar_Liq_telem} cm')  
+                else:
+                    print("RadarOFF", radarSensorActive)
 
             except Exception as e:
                 print(f"An error occurred: {e}")
