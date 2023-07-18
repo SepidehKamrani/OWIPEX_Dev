@@ -28,7 +28,7 @@
 from ph_control import PHControl
 
 # Erstellt ein PHControl-Objekt
-ph_control = PHControl(min_ph=5.0, max_ph=7.0, check_timer=60, on_delay_timer=60)
+ph_control = PHControl(min_ph=5.0, max_ph=7.0, check_timer=60, on_delay_timer=60, pump_start_delay=5)
 
 # Aktualisieren Sie den gemessenen pH-Wert in Ihrem Hauptprogramm
 # Dies sollte in Ihrem tatsächlichen Code durch eine tatsächliche pH-Messung ersetzt werden
@@ -41,3 +41,7 @@ ph_control.set_pump_switch(True)
 # Setzen Sie den CO2-Ventilschalter in Ihrem Hauptprogramm
 # Dies sollte in Ihrem tatsächlichen Code durch eine tatsächliche Benutzereingabe oder andere Logik ersetzt werden
 ph_control.set_co2_valve_switch(True)
+
+# Setzen Sie die Anlaufverzögerung für die Pumpe
+# Dies sollte in Ihrem tatsächlichen Code durch eine tatsächliche Benutzereingabe oder andere Logik ersetzt werden
+ph_control.set_pump_delay(10)

@@ -8,11 +8,15 @@ import math
 from tb_gateway_mqtt import TBDeviceMqttClient
 from modbus_lib import DeviceManager
 from time import sleep
+from ph_control import PHControl
 
 ACCESS_TOKEN = "I9Vbnng0MBpxY5UDX67l"  # Replace this with your actual access token
 THINGSBOARD_SERVER = 'localhost'  # Replace with your Thingsboard server address
 THINGSBOARD_PORT = 1883
 
+# Erstellt ein PHControl-Objekt
+ph_control = PHControl(min_ph=5.0, max_ph=8.0, check_timer=60, on_delay_timer=60)
+ph_control.set_pump_delay(10)
 
 #RS485 Comunication and Devices
 # Create DeviceManager
@@ -328,6 +332,8 @@ def main():
             
             # Main Logic
             if autoSwitch:
+                ph_control.set_measured_ph(measuredPHValue_telem)
+                ph_control.set_pump_switch(True)
                 #time.sleep(1)
                 print("automode ON", autoSwitch)
             else:
@@ -335,6 +341,9 @@ def main():
                 print("automode OFF", autoSwitch)
         else:
             print("Power Switch OFF.", powerSwitch)
+            ph_control.set_pump_switch(False)
+            ph_control.set_co2_valve_switch(False)
+            autoSwitch = False
         time.sleep(2)
 
 

@@ -13,20 +13,6 @@
 # ermöglicht die automatische Regelung eines CO2-Ventils und einer Pumpe
 # basierend auf dem gemessenen pH-Wert und Benutzereingaben. Die Klasse nutzt
 # dabei die GPIOControl-Klasse, um die GPIOs zu steuern.
-#
-# Die Klasse verfügt über folgende Methoden zur Interaktion:
-#
-# - `set_measured_ph(ph)`: Setzt den aktuell gemessenen pH-Wert.
-# - `set_pump_switch(switch)`: Steuert den Schalter für die Pumpe. Wenn `switch`
-# auf `True` gesetzt ist, wird die Pumpe eingeschaltet, und wenn `switch` auf
-# `False` gesetzt ist, wird die Pumpe ausgeschaltet.
-# - `set_co2_valve_switch(switch)`: Erlaubt die manuelle Steuerung des CO2-Ventils.
-# Wenn `switch` auf `True` gesetzt ist, wird das CO2-Ventil eingeschaltet, und wenn
-# `switch` auf `False` gesetzt ist, wird das CO2-Ventil ausgeschaltet.
-#
-# Das Modul startet einen Hintergrundthread, der kontinuierlich die Systemparameter
-# überprüft und entsprechend die Geräte steuert. Die manuelle Steuerung der Geräte
-# hat dabei Vorrang vor der automatischen Steuerung basierend auf dem gemessenen pH-Wert.
 # -----------------------------------------------------------------------------
 """
 # ph_control.py
@@ -35,11 +21,12 @@ import threading
 from gpiocontrol import GPIOControl
 
 class PHControl:
-    def __init__(self, min_ph, max_ph, check_timer, on_delay_timer):
+    def __init__(self, min_ph, max_ph, check_timer, on_delay_timer, pump_start_delay=0):
         self.min_ph = min_ph
         self.max_ph = max_ph
         self.check_timer = check_timer
         self.on_delay_timer = on_delay_timer
+        self.pump_start_delay = pump_start_delay
         self.measured_ph = None
         self.pump_switch = False
         self.co2_valve_switch = None  # Neue Variable für die manuelle CO2-Ventilsteuerung
@@ -64,10 +51,14 @@ class PHControl:
     def set_co2_valve_switch(self, switch):
         self.co2_valve_switch = switch
 
+    def set_pump_delay(self, delay):
+        self.pump_start_delay = delay
+
     def control_loop(self):
         while True:
             # Steuerung der Pumpe
             if self.pump_switch:
+                time.sleep(self.pump_start_delay)
                 self.pump.set_value('0')  # Pumpe ein
             else:
                 self.pump.set_value('1')  # Pumpe aus
