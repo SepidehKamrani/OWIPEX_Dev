@@ -360,7 +360,7 @@ def main():
             print("Power Switch OFF.", powerSwitch)
             ph_control.set_pump_switch(False)
             ph_control.set_co2_valve_switch(False)
-            autoSwitch = False
+            #autoSwitch = False
         time.sleep(2)
 
 
