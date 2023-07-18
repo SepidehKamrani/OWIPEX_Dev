@@ -24,8 +24,8 @@ Description: Calibration program for water level sensor and flow rate
 
 from tqdm import tqdm
 from modbus_lib import DeviceManager
-import json
 import time
+import json
 from gpiocontrol import GPIOControl
 
 class Calibration:
@@ -58,37 +58,39 @@ class Calibration:
             print("Bitte bereiten Sie sich vor und starten Sie das Programm erneut, wenn Sie bereit sind.")
             exit()
 
-    def countdown(self, t):
-        for i in tqdm(range(t, 0, -1)):
-            time.sleep(1)
-
     def start_calibration(self):
-        print("\nKARIM Technologies Calibration Program\n")
-        vessel_size = float(input("Bitte geben Sie das Volumen des Kalibriergefäßes in Litern ein: "))
+        print("\nWARNUNG: Der Kalibrierungsprozess wird nun gestartet. Die Pumpe wird eingeschaltet.")
+        print("Sind Sie bereit, den Kalibrierungsprozess zu starten? (yes/no)")
+        answer = input().lower()
+        if answer == 'yes':
+            self.pump.set_value('0')  # Turn on pump
+        else:
+            print("Kalibrierungsprozess wurde nicht gestartet. Bitte bereiten Sie sich vor und starten Sie das Programm erneut, wenn Sie bereit sind.")
+            exit()
+
+        vessel_size = float(input("Bitte geben Sie die Größe des Kalibriergefäßes in Litern ein: "))
         
         while True:
-            print("\nBitte erhöhen Sie die Durchflussrate und bestätigen Sie mit Enter.")
+            print("Bitte stellen Sie die Pumpe auf eine höhere Durchflussrate und bestätigen Sie mit Enter.")
             input()
 
-            print("\nWarten auf Stabilisierung des Systems...")
-            self.countdown(180)  # 3 minutes countdown
+            print("Bitte warten Sie 3 Minuten, bis sich das System eingependelt hat.")
+            for i in tqdm(range(180)):
+                time.sleep(1)
 
             water_height = self.radar_sensor.read_radar_sensor(register_address=0x0001)
-            print(f'\nGemessene Wasserhöhe: {water_height} mm')
+            print(f'Wasserhöhe: {water_height} mm')
 
-            fill_time = float(input("\nBitte geben Sie die Zeit in Sekunden ein, die es gedauert hat, um das Kalibriergefäß zu füllen: "))
-
-            flow_rate = (vessel_size / fill_time) * 3600  # in liters per hour
-
-            print(f'\nDurchflussrate: {flow_rate} Liter pro Stunde')
+            fill_time = float(input("Bitte geben Sie die Zeit ein, die benötigt wurde, um das Kalibriergefäß zu füllen (in Sekunden): "))
+            flow_rate = (vessel_size / fill_time) * 60
 
             self.calibration_data.append({
                 'water_height': water_height,
                 'flowRate': flow_rate
             })
 
-            continue_calibration = input("\nMöchten Sie mit der Kalibrierung fortfahren? (j/n): ")
-            if continue_calibration.lower() != 'j':
+            should_continue = input("Möchten Sie weitermachen? (yes/no): ")
+            if should_continue.lower() != 'yes':
                 break
 
         self.save_calibration_data()
@@ -96,15 +98,12 @@ class Calibration:
     def save_calibration_data(self):
         with open('calibration_data.json', 'w') as outfile:
             json.dump(self.calibration_data, outfile)
-
-        print("\nKalibrierungsdaten erfolgreich gespeichert!")
-        for data in self.calibration_data:
-            print(data)
-
+        print("Kalibrierungsdaten erfolgreich gespeichert!")
+        print(self.calibration_data)
 
 if __name__ == "__main__":
     dev_manager = DeviceManager(port='/dev/ttymxc3', baudrate=9600, parity='N', stopbits=1, bytesize=8, timeout=1)
     dev_manager.add_device(device_id=0x01)
-
     calibrator = Calibration(dev_manager)
+    calibrator.fill_tank()
     calibrator.start_calibration()
