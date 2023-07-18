@@ -4,6 +4,7 @@ import os
 import random
 import gpsDataLib
 import math
+import json
 
 from tb_gateway_mqtt import TBDeviceMqttClient
 from modbus_lib import DeviceManager
@@ -72,6 +73,10 @@ radarSensorActive = False
 radarSensorOffset = 0.0
 radarSensorEmpty = 3.0
 radarSensorDrain = 0.0
+#Flow
+flow_rate_l_min = 20.0
+flow_rate_l_h = 20.0
+flow_rate_m3_min = 20.0
 #GPS
 gpsTimestamp = 1.0
 gpsLatitude = 1.0
@@ -221,14 +226,14 @@ def main():
     client.connect()
     
     # Pfad zur Kalibrierungsdatei
-    calibration_file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "calibration_data.json")
+    #calibration_file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "calibration_data.json")
 
     # Erstelle eine Instanz der FlowCalculation-Klasse
-    flow_calc = FlowCalculation(calibration_file_path)
+    #flow_calc = FlowCalculation(calibration_file_path)
 
     # Hole den 0-Referenzwert
-    zero_ref = flow_calc.get_zero_reference()
-    print(f"Zero Reference: {zero_ref}")
+    #zero_ref = flow_calc.get_zero_reference()
+    #print(f"Zero Reference: {zero_ref}")
 
 
 
