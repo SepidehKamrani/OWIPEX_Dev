@@ -14,6 +14,7 @@
 # -----------------------------------------------------------------------------
 
 import math
+import json
 from scipy.interpolate import interp1d
 
 class FlowCalculation:
@@ -24,8 +25,16 @@ class FlowCalculation:
     def load_calibration_data(self, calibration_file):
         with open(calibration_file, 'r') as f:
             calibration_data = json.load(f)
-        self.zero_reference = calibration_data[0]  # store zero reference
-        self.calibration_function = interp1d(calibration_data[:, 0], calibration_data[:, 1], fill_value="extrapolate")
+        self.zero_reference = calibration_data[0]['zero_point']  # store zero reference
+
+        # Exclude zero point entry from the calibration data
+        calibration_data = calibration_data[1:]
+
+        # Extract data from the dictionaries
+        x_data = [entry['water_height'] for entry in calibration_data]
+        y_data = [entry['flowRate'] for entry in calibration_data]
+
+        self.calibration_function = interp1d(x_data, y_data, fill_value="extrapolate")
     
     def calculate_flow_rate(self, water_level):
         water_level /= 1000  # convert mm to m

@@ -1,0 +1,13 @@
+[
+    {
+        "zero_point": 1234
+    },
+    {
+        "water_height": 1000,
+        "flowRate": 2.0
+    },
+    {
+        "water_height": 2000,
+        "flowRate": 4.0
+    }
+]
