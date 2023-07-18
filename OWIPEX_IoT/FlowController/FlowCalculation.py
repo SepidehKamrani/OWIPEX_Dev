@@ -22,10 +22,11 @@ class FlowCalculation:
         self.load_calibration_data(calibration_file)
 
     def load_calibration_data(self, calibration_file):
-        calibration_data = np.genfromtxt(calibration_file, delimiter=',')
-        self.zero_reference = calibration_data[0, :]  # store zero reference
+        with open(calibration_file, 'r') as f:
+            calibration_data = json.load(f)
+        self.zero_reference = calibration_data[0]  # store zero reference
         self.calibration_function = interp1d(calibration_data[:, 0], calibration_data[:, 1], fill_value="extrapolate")
-
+    
     def calculate_flow_rate(self, water_level):
         water_level /= 1000  # convert mm to m
         return self.calibration_function(water_level)  # flow rate in m3/h

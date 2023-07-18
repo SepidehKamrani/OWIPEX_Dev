@@ -9,6 +9,7 @@ from tb_gateway_mqtt import TBDeviceMqttClient
 from modbus_lib import DeviceManager
 from time import sleep
 from ph_control import PHControl
+from FlowCalculation import FlowCalculation
 
 ACCESS_TOKEN = "I9Vbnng0MBpxY5UDX67l"  # Replace this with your actual access token
 THINGSBOARD_SERVER = 'localhost'  # Replace with your Thingsboard server address
@@ -17,6 +18,8 @@ THINGSBOARD_PORT = 1883
 # Erstellt ein PHControl-Objekt
 ph_control = PHControl(min_ph=5.0, max_ph=8.0, check_timer=60, on_delay_timer=60)
 ph_control.set_pump_delay(10)
+
+
 
 #RS485 Comunication and Devices
 # Create DeviceManager
@@ -78,26 +81,6 @@ gpsHeight = 1.0
 alarmActiveMachine = ""
 alarmMessage = ""
 resetAlarm = ""
-
-
-
-#Flow Calculation
-def calculate_flow_rate(water_level, outlet_height, outlet_diameter):
-    g = 9.81  # gravitational constant, m/s^2
-    r = outlet_diameter / 2  # radius of the outlet
-    A = math.pi * r ** 2  # area of the outlet
-    h = water_level - outlet_height  # height of the water above the outlet
-
-    if h < 0:
-        print("Warning: water level is below outlet height. Setting flow rate to zero.")
-        return 0
-    else:
-        v = math.sqrt(2 * g * h)  # velocity
-        Q = A * v * 3600 # flow rate
-        return Q
-    
-
-
 
 
 # Callback function that will be called when the value of our Shared Attribute changes
@@ -164,7 +147,7 @@ def rpc_callback(id, request_body):
         print('Unknown method: ' + method)
 
 def get_data():
-    global temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, totalVolume, gpsTimestamp, gpsLatitude, gpsLongitude, gpsHeight, totalVolume, tankVolumeToOutlet, tankVolumeToMaxAllowedFill, messuredRadar_Air_telem, radarSensorDrain, radarSensorEmpty
+    global temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, totalVolume, gpsTimestamp, gpsLatitude, gpsLongitude, gpsHeight, totalVolume, tankVolumeToOutlet, tankVolumeToMaxAllowedFill, messuredRadar_Air_telem, radarSensorDrain, radarSensorEmpty,  flow_rate_l_min, flow_rate_l_h, flow_rate_m3_min
     cpu_usage = round(float(os.popen('''grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage }' ''').readline().replace('\n', '').replace(',', '.')), 2)
     ip_address = os.popen('''hostname -I''').readline().replace('\n', '').replace(',', '.')[:-1]
     mac_address = os.popen('''cat /sys/class/net/*/address''').readline().replace('\n', '').replace(',', '.')
@@ -216,7 +199,13 @@ def get_data():
         'messuredRadar_Air_telem': messuredRadar_Air_telem,
         #Alarm
         'alarmActive_telem': alarmActive_telem,
-        'alarmOverfill_telem': alarmOverfill_telem
+        'alarmOverfill_telem': alarmOverfill_telem,
+
+        'flow_rate_l_min': flow_rate_l_min,
+        'flow_rate_l_h': flow_rate_l_h,
+        'flow_rate_m3_min': flow_rate_m3_min
+
+
         
         
         
@@ -227,10 +216,22 @@ def get_data():
 
 def main():
     #def Global Variables for Main Funktion
-    global client, temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, gpsTimestamp, gpsLatitude, gpsLongitude, gpsHeight, waterLevelHeight_telem, calculatedFlowRate, messuredRadar_Air_telem
+    global client, temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, gpsTimestamp, gpsLatitude, gpsLongitude, gpsHeight, waterLevelHeight_telem, calculatedFlowRate, messuredRadar_Air_telem, flow_rate_l_min, flow_rate_l_h, flow_rate_m3_min
     client = TBDeviceMqttClient(THINGSBOARD_SERVER, THINGSBOARD_PORT, ACCESS_TOKEN)
     client.connect()
     
+    # Pfad zur Kalibrierungsdatei
+    calibration_file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "calibration_data.json")
+
+    # Erstelle eine Instanz der FlowCalculation-Klasse
+    flow_calc = FlowCalculation(calibration_file_path)
+
+    # Hole den 0-Referenzwert
+    zero_ref = flow_calc.get_zero_reference()
+    print(f"Zero Reference: {zero_ref}")
+
+
+
     # Request shared attributes
     client.request_attributes(shared_keys=['length', 'width', 'height', 'maximumFillHeight', 'outletDiameter', 'outletHeight', 'minimumPHValue', 'maximumPHValue', 'PHValueOffset', 'maximumTurbidity', 'turbiditySensorActive', 'turbidityOffset', 'radarSensorActive', 'alarmActiveMachine', 'alarmMessageMachine', 'resetAlarm', 'powerSwitch', 'autoSwitch', 'callGpsSwitch'], callback=attribute_callback)
     
@@ -273,10 +274,20 @@ def main():
         client.send_attributes(attributes)
         client.send_telemetry(telemetry)
         
-        # Berechnen der Durchflussrate anhand der Wasserhöhe, Auslaufhöhe und des Auslaufdurchmessers
-        calculatedFlowRate = calculate_flow_rate(waterLevelHeight_telem, outletHeight, outletDiameter)
-        print("calculatedFlowRate: ", calculatedFlowRate)
-        waterLevelHeight_telem = radarSensorEmpty - (float(messuredRadar_Air_telem) / 1000)
+        waterLevelHeight_telem = zero_ref - messuredRadar_Air_telem
+
+        # Berechne den Durchfluss für eine bestimmte Wasserhöhe
+        water_level = waterLevelHeight_telem  # in mm
+        flow_rate = flow_calc.calculate_flow_rate(water_level)
+        print(f"Flow Rate (m3/h): {flow_rate}")
+
+        # Konvertiere den Durchfluss in verschiedene Einheiten
+        flow_rate_l_min = flow_calc.convert_to_liters_per_minute(flow_rate)
+        flow_rate_l_h = flow_calc.convert_to_liters_per_hour(flow_rate)
+        flow_rate_m3_min = flow_calc.convert_to_cubic_meters_per_minute(flow_rate)
+
+
+
         #GPS DATA
         #Call GPS Data. Can be called even whitout power Switch. 
         if callGpsSwitch:
