@@ -16,11 +16,6 @@ ACCESS_TOKEN = "I9Vbnng0MBpxY5UDX67l"  # Replace this with your actual access to
 THINGSBOARD_SERVER = 'localhost'  # Replace with your Thingsboard server address
 THINGSBOARD_PORT = 1883
 
-# Erstellt ein PHControl-Objekt
-ph_control = PHControl(min_ph=5.0, max_ph=8.0, check_timer=60, on_delay_timer=60)
-ph_control.set_pump_delay(10)
-
-
 
 #RS485 Comunication and Devices
 # Create DeviceManager
@@ -224,16 +219,21 @@ def main():
     global client, temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, gpsTimestamp, gpsLatitude, gpsLongitude, gpsHeight, waterLevelHeight_telem, calculatedFlowRate, messuredRadar_Air_telem, flow_rate_l_min, flow_rate_l_h, flow_rate_m3_min
     client = TBDeviceMqttClient(THINGSBOARD_SERVER, THINGSBOARD_PORT, ACCESS_TOKEN)
     client.connect()
+
+    # Erstellt ein PHControl-Objekt
+    ph_control = PHControl(min_ph=5.0, max_ph=8.0, check_timer=5, on_delay_timer=5)
+    ph_control.set_pump_delay(1)
+    
     
     # Pfad zur Kalibrierungsdatei
-    #calibration_file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "calibration_data.json")
+    calibration_file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "calibration_data.json")
 
     # Erstelle eine Instanz der FlowCalculation-Klasse
-    #flow_calc = FlowCalculation(calibration_file_path)
+    flow_calc = FlowCalculation(calibration_file_path)
 
     # Hole den 0-Referenzwert
-    #zero_ref = flow_calc.get_zero_reference()
-    #print(f"Zero Reference: {zero_ref}")
+    zero_ref = flow_calc.get_zero_reference()
+    print(f"Zero Reference: {zero_ref}")
 
 
 
@@ -350,6 +350,7 @@ def main():
             if autoSwitch:
                 ph_control.set_measured_ph(measuredPHValue_telem)
                 ph_control.set_pump_switch(True)
+                #print("ph_control.set_pump_switch(True)", ph_control.set_pump_switch)
                 #time.sleep(1)
                 print("automode ON", autoSwitch)
             else:

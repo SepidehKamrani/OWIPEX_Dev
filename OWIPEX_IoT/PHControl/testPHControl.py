@@ -24,24 +24,37 @@
 # -----------------------------------------------------------------------------
 """
 
-# main.py
-from ph_control import PHControl
+def main():
+    # Erstelle ein PHControl-Objekt
+    ph_controller = PHControl(min_ph=6.5, max_ph=7.5, check_timer=10, on_delay_timer=5)
 
-# Erstellt ein PHControl-Objekt
-ph_control = PHControl(min_ph=5.0, max_ph=7.0, check_timer=60, on_delay_timer=60, pump_start_delay=5)
+    # Setze den gemessenen pH-Wert
+    ph_controller.set_measured_ph(7.6)
 
-# Aktualisieren Sie den gemessenen pH-Wert in Ihrem Hauptprogramm
-# Dies sollte in Ihrem tatsächlichen Code durch eine tatsächliche pH-Messung ersetzt werden
-ph_control.set_measured_ph(8.0)
+    # Lass die Pumpe laufen
+    ph_controller.set_pump_switch(True)
 
-# Setzen Sie den Pumpenschalter in Ihrem Hauptprogramm
-# Dies sollte in Ihrem tatsächlichen Code durch eine tatsächliche Benutzereingabe oder andere Logik ersetzt werden
-ph_control.set_pump_switch(True)
+    # Manuelle Kontrolle des CO2-Ventils (EIN)
+    ph_controller.set_co2_valve_switch(True)
 
-# Setzen Sie den CO2-Ventilschalter in Ihrem Hauptprogramm
-# Dies sollte in Ihrem tatsächlichen Code durch eine tatsächliche Benutzereingabe oder andere Logik ersetzt werden
-ph_control.set_co2_valve_switch(True)
+    # Warte für eine Weile
+    time.sleep(20)
 
-# Setzen Sie die Anlaufverzögerung für die Pumpe
-# Dies sollte in Ihrem tatsächlichen Code durch eine tatsächliche Benutzereingabe oder andere Logik ersetzt werden
-ph_control.set_pump_delay(10)
+    # Ändere den gemessenen pH-Wert
+    ph_controller.set_measured_ph(7.2)
+
+    # Manuelle Kontrolle des CO2-Ventils (AUS)
+    ph_controller.set_co2_valve_switch(False)
+
+    # Warte für eine Weile
+    time.sleep(20)
+
+    # Automatische Kontrolle des CO2-Ventils
+    # Setze den CO2-Ventilschalter auf None, um automatische Kontrolle zu ermöglichen
+    ph_controller.set_co2_valve_switch(None)
+
+    # Lasse das Programm für eine Weile laufen, um den Automatisierungsprozess zu beobachten
+    time.sleep(100)
+
+if __name__ == "__main__":
+    main()
