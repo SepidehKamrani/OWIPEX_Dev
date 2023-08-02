@@ -242,7 +242,7 @@ def main():
     
     # Subscribe to individual attributes
     #machine
-    client.subscribe_to_attribute("powerSwitch", attribute_callback)
+    client.subscribe_to_attribute("", attribute_callback)
     client.subscribe_to_attribute("autoSwitch", attribute_callback)
     client.subscribe_to_attribute('length', attribute_callback)
     client.subscribe_to_attribute('width', attribute_callback)
