@@ -161,10 +161,12 @@ class Calibration:
             time_to_fill = float(input())
             flow_rate = vessel_size / time_to_fill  # Calculate flow rate in L/s
             print(f'Flow rate: {flow_rate} L/s')
+            zero_point = self.calibration_data[0]['zero_point']  # Assuming the zero point is the first data entry
+            actual_water_height = zero_point - current_height
             self.calibration_data.append({
-                'height': current_height,
-                'flow_rate': flow_rate
-            })
+            'water_height': actual_water_height,
+            'flow_rate': flow_rate
+})
             self.save_calibration_data()
             self.print_table()  # Print the table
             print("Möchten Sie weitermachen? (yes/no)")
