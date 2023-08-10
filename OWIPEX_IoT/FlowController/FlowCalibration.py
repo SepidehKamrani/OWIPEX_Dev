@@ -32,16 +32,6 @@ import itertools
 import sys
 
 
-from tqdm import tqdm
-from modbus_lib import DeviceManager
-import time
-import json
-from gpiocontrol import GPIOControl
-import atexit
-import itertools
-import sys
-
-
 class Calibration:
     def __init__(self, device_manager):
         self.device_manager = device_manager

@@ -11,11 +11,11 @@
 # Description: Dieses Modul stellt die PHControl-Klasse bereit, die eine
 # automatisierte Kontrolle des pH-Wertes in einem System ermöglicht. Sie
 # ermöglicht die automatische Regelung eines CO2-Ventils und einer Pumpe
-# basierend auf dem gemessenen pH-Wert und Benutzereingaben. Die Klasse nutzt
-# dabei die GPIOControl-Klasse, um die GPIOs zu steuern.
+# basierend auf dem gemessenen pH-Wert und Benutzereingaben. 
 # -----------------------------------------------------------------------------
 """
-# ph_control.py
+
+
 import time
 import threading
 from gpiocontrol import GPIOControl
@@ -53,6 +53,12 @@ class PHControl:
 
     def set_pump_delay(self, delay):
         self.pump_start_delay = delay
+
+    def get_pump_switch(self):
+        return self.pump_switch
+
+    def get_co2_valve_switch(self):
+        return self.co2_valve_switch
 
     def control_loop(self):
         while True:
