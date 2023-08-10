@@ -1,9 +1,7 @@
 import logging.handlers
 import time
 import os
-import random
 import gpsDataLib
-import math
 import json
 
 from tb_gateway_mqtt import TBDeviceMqttClient
@@ -12,7 +10,9 @@ from time import sleep
 from ph_control import PHControl
 from FlowCalculation import FlowCalculation
 
-ACCESS_TOKEN = "I9Vbnng0MBpxY5UDX67l"  # Replace this with your actual access token
+
+
+ACCESS_TOKEN = "buyj4qVjjCWd1Zvp4onK"  # Replace this with your actual access token
 THINGSBOARD_SERVER = 'localhost'  # Replace with your Thingsboard server address
 THINGSBOARD_PORT = 1883
 
@@ -35,19 +35,16 @@ client = None
 
 # Global Variables
 #Machine 
-length = 4.0
-width = 2.8
-height = 2.5
-maximumFillHeight = 2.3
-outletDiameter = 0.05
-outletHeight = 1.6
-totalVolume = 1.0
-tankVolumeToOutlet = 1.0
-tankVolumeToMaxAllowedFill = 1.0
 calculatedFlowRate = 1.0
-powerSwitch = False
+powerButton = False
 autoSwitch = False
 callGpsSwitch = False
+co2RelaisSw = False
+pumpRelaySw = False
+co2HeatingRelaySw = False
+co2RelaisSwSig = False
+pumpRelaySwSig = False
+co2HeatingRelaySwSig = False
 #PH
 minimumPHValue = ""
 maximumPHValue = ""
@@ -66,8 +63,6 @@ waterLevelHeight_telem = 2.0
 messuredRadar_Air_telem = 1 
 radarSensorActive = False
 radarSensorOffset = 0.0
-radarSensorEmpty = 3.0
-radarSensorDrain = 0.0
 #Flow
 flow_rate_l_min = 20.0
 flow_rate_l_h = 20.0
@@ -77,31 +72,13 @@ gpsTimestamp = 1.0
 gpsLatitude = 1.0
 gpsLongitude = 1.0
 gpsHeight = 1.0
-#ALARM
-alarmActiveMachine = ""
-alarmMessage = ""
-resetAlarm = ""
 
 
 # Callback function that will be called when the value of our Shared Attribute changes
 def attribute_callback(result, _):
-    global length, width, height, radarSensorEmpty, radarSensorDrain, maximumFillHeight, outletDiameter, outletHeight, minimumPHValue, maximumPHValue, PHValueOffset, maximumTurbidity, turbiditySensorActive, turbidityOffset, radarSensorActive, radarOffset, alarmActiveMachine, alarmMessageMachine, resetAlarm, powerSwitch, autoSwitch, callGpsSwitch
+    global minimumPHValue, maximumPHValue, PHValueOffset, maximumTurbidity, turbiditySensorActive, turbidityOffset, radarSensorActive, radarOffset, autoSwitch, callGpsSwitch, powerButton, co2RelaisSw, co2HeatingRelaySw, pumpRelaySw
     print(result)
     #machine
-    if 'length' in result:
-        length = result['length']
-    if 'width' in result:
-        width = result['width']
-    if 'height' in result:
-        height = result['height']
-    if 'maximumFillHeight' in result:
-        maximumFillHeight = result['maximumFillHeight']
-    if 'outletDiameter' in result:
-        outletDiameter = result['outletDiameter']
-    if 'outletHeight' in result:
-        outletHeight = result['outletHeight']
-    if 'powerSwitch' in result:
-        powerSwitch = result['powerSwitch']
     if 'autoSwitch' in result:
         autoSwitch = result['autoSwitch']
     if 'callGpsSwitch' in result:
@@ -122,16 +99,15 @@ def attribute_callback(result, _):
         radarSensorActive = result['radarSensorActive']
     if 'radarOffset' in result:
         radarOffset = result['radarOffset']
-    if 'alarmActiveMachine' in result:
-        alarmActiveMachine = result['alarmActiveMachine']
-    if 'alarmMessageMachine' in result:
-        alarmMessageMachine = result['alarmMessageMachine']
-    if 'resetAlarm' in result:
-        resetAlarm = result['resetAlarm']
-    if 'radarSensorEmpty' in result:
-        radarSensorEmpty = result['radarSensorEmpty']
-    if 'radarSensorDrain' in result:
-        radarSensorDrain = result['radarSensorDrain']    
+    if 'powerButton' in result:
+        powerButton = result['powerButton']   
+    if 'co2RelaisSw' in result:
+        co2RelaisSw = result['co2RelaisSw']   
+    if 'pumpRelaySw' in result:
+        pumpRelaySw = result['pumpRelaySw']
+    if 'co2HeatingRelaySw' in result:
+        co2HeatingRelaySw = result['co2HeatingRelaySw']    
+        
          
     
 
@@ -147,7 +123,7 @@ def rpc_callback(id, request_body):
         print('Unknown method: ' + method)
 
 def get_data():
-    global temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, totalVolume, gpsTimestamp, gpsLatitude, gpsLongitude, gpsHeight, totalVolume, tankVolumeToOutlet, tankVolumeToMaxAllowedFill, messuredRadar_Air_telem, radarSensorDrain, radarSensorEmpty,  flow_rate_l_min, flow_rate_l_h, flow_rate_m3_min
+    global temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, gpsTimestamp, gpsLatitude, gpsLongitude, gpsHeight, messuredRadar_Air_telem, flow_rate_l_min, flow_rate_l_h, flow_rate_m3_min, co2HeatingRelaySwSig, pumpRelaySwSig, co2RelaisSwSig 
     cpu_usage = round(float(os.popen('''grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage }' ''').readline().replace('\n', '').replace(',', '.')), 2)
     ip_address = os.popen('''hostname -I''').readline().replace('\n', '').replace(',', '.')[:-1]
     mac_address = os.popen('''cat /sys/class/net/*/address''').readline().replace('\n', '').replace(',', '.')
@@ -159,14 +135,8 @@ def get_data():
     boot_time = os.popen('uptime -p').read()[:-1]
     avg_load = (cpu_usage + ram_usage) / 2
     
-    #device
-    alarmActive_telem = False 
-    alarmOverfill_telem = False
-
     #calculate tank volumes
-    totalVolume = length * width * height
-    tankVolumeToOutlet = length * width * outletHeight
-    tankVolumeToMaxAllowedFill = length * width * maximumFillHeight
+
 
     attributes = {
         'ip_address': ip_address,
@@ -186,20 +156,19 @@ def get_data():
         'calculatedFlowRate': calculatedFlowRate,
         'waterLevelHeight_telem': waterLevelHeight_telem,
         'measuredTurbidity_telem': measuredTurbidity_telem,
+        'co2RelaisSwSig': co2RelaisSwSig,
+        'co2HeatingRelaySwSig': co2HeatingRelaySwSig,
+        'pumpRelaySwSig': pumpRelaySwSig,
+  
         #PH Sens
         'measuredPHValue_telem': measuredPHValue_telem,
         'temperaturPHSens_telem': temperaturPHSens_telem,
-        'totalVolume': totalVolume,
         'gpsTimestamp': gpsTimestamp,
         'gpsLatitude': gpsLatitude,
         'gpsLongitude': gpsLongitude,
         'gpsHeight': gpsHeight,
-        'tankVolumeToOutlet': tankVolumeToOutlet,
-        'tankVolumeToMaxAllowedFill': tankVolumeToMaxAllowedFill,
+
         'messuredRadar_Air_telem': messuredRadar_Air_telem,
-        #Alarm
-        'alarmActive_telem': alarmActive_telem,
-        'alarmOverfill_telem': alarmOverfill_telem,
 
         'flow_rate_l_min': flow_rate_l_min,
         'flow_rate_l_h': flow_rate_l_h,
@@ -214,11 +183,21 @@ def get_data():
     print(attributes, telemetry)
     return attributes, telemetry
 
+
+def sync_state(result, exception=None):
+    global powerButton
+    if exception is not None:
+        print("Exception: " + str(exception))
+    else:
+        period = result.get('shared', {'powerButton': False})['powerButton']
+
+
 def main():
     #def Global Variables for Main Funktion
-    global client, temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, gpsTimestamp, gpsLatitude, gpsLongitude, gpsHeight, waterLevelHeight_telem, calculatedFlowRate, messuredRadar_Air_telem, flow_rate_l_min, flow_rate_l_h, flow_rate_m3_min
+    global client, temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, gpsTimestamp, gpsLatitude, gpsLongitude, gpsHeight, waterLevelHeight_telem, calculatedFlowRate, messuredRadar_Air_telem, flow_rate_l_min, flow_rate_l_h, flow_rate_m3_min, co2RelaisSwSig, co2HeatingRelaySwSig, pumpRelaySwSig, co2RelaisSw, co2HeatingRelaySw, pumpRelaySw
     client = TBDeviceMqttClient(THINGSBOARD_SERVER, THINGSBOARD_PORT, ACCESS_TOKEN)
     client.connect()
+    client.request_attributes(shared_keys=['powerButton'], callback=sync_state)
 
     # Erstellt ein PHControl-Objekt
     ph_control = PHControl(min_ph=5.0, max_ph=8.0, check_timer=5, on_delay_timer=5)
@@ -238,18 +217,16 @@ def main():
 
 
     # Request shared attributes
-    client.request_attributes(shared_keys=['length', 'width', 'height', 'maximumFillHeight', 'outletDiameter', 'outletHeight', 'minimumPHValue', 'maximumPHValue', 'PHValueOffset', 'maximumTurbidity', 'turbiditySensorActive', 'turbidityOffset', 'radarSensorActive', 'alarmActiveMachine', 'alarmMessageMachine', 'resetAlarm', 'powerSwitch', 'autoSwitch', 'callGpsSwitch'], callback=attribute_callback)
+    client.request_attributes(shared_keys=['minimumPHValue', 'maximumPHValue', 'PHValueOffset', 'maximumTurbidity', 'turbiditySensorActive', 'turbidityOffset', 'radarSensorActive', 'alarmActiveMachine', 'alarmMessageMachine', 'resetAlarm', 'autoSwitch', 'callGpsSwitch', 'powerButton', 'co2RelaisSwSig'], callback=attribute_callback)
     
     # Subscribe to individual attributes
     #machine
     client.subscribe_to_attribute("", attribute_callback)
     client.subscribe_to_attribute("autoSwitch", attribute_callback)
-    client.subscribe_to_attribute('length', attribute_callback)
-    client.subscribe_to_attribute('width', attribute_callback)
-    client.subscribe_to_attribute('height', attribute_callback)
-    client.subscribe_to_attribute('maximumFillHeight', attribute_callback)
-    client.subscribe_to_attribute('outletDiameter', attribute_callback)
-    client.subscribe_to_attribute('outletHeight', attribute_callback)
+    client.subscribe_to_attribute('powerButton', attribute_callback)
+    client.subscribe_to_attribute("co2RelaisSw", attribute_callback)
+    client.subscribe_to_attribute("pumpRelaySw", attribute_callback)
+    client.subscribe_to_attribute("co2HeatingRelaySw", attribute_callback)
     #PH
     client.subscribe_to_attribute('minimumPHValue', attribute_callback)
     client.subscribe_to_attribute('maximumPHValue', attribute_callback)
@@ -260,8 +237,6 @@ def main():
     client.subscribe_to_attribute('turbidityOffset', attribute_callback)
     #Radar
     client.subscribe_to_attribute('radarSensorActive', attribute_callback)
-    client.subscribe_to_attribute('radarSensorDrain', attribute_callback)
-    client.subscribe_to_attribute('radarSensorEmpty', attribute_callback)
      
     'Alarm'
     client.subscribe_to_attribute('alarmActiveMachine', attribute_callback)
@@ -280,6 +255,8 @@ def main():
         client.send_telemetry(telemetry)
         
         waterLevelHeight_telem = zero_ref - messuredRadar_Air_telem
+        ph_control.set_measured_ph(measuredPHValue_telem)
+        
 
         # Berechne den Durchfluss für eine bestimmte Wasserhöhe
         water_level = waterLevelHeight_telem  # in mm
@@ -317,14 +294,14 @@ def main():
             print("GPS-Aufruf ist deaktiviert.", callGpsSwitch)  
 
         #Main power switch if
-        if powerSwitch:
+        if powerButton:
 
             try:
                 # Start auto read
                 # Read temperatures
                 measuredPHValue_telem = PH_Sensor.read_register(start_address=0x0001, register_count=2)
                 temperaturPHSens_telem = PH_Sensor.read_register(start_address=0x0003, register_count=2)
-                print(f'PH: {measuredPHValue_telem}, Temperature PH Sens: {temperaturPHSens_telem}', powerSwitch)
+                print(f'PH: {measuredPHValue_telem}, Temperature PH Sens: {temperaturPHSens_telem}')
 
                 if turbiditySensorActive:
                     # Read other values
@@ -333,11 +310,12 @@ def main():
                     print(f'Trueb: {measuredTurbidity_telem}, Trueb Temp Sens: {tempTruebSens}')   
                 else:
                     print("TruebOFF", turbiditySensorActive)
+ 
+                    
 
                 if radarSensorActive:
                     # Read other values
                     messuredRadar_Air_telem = Radar_Sensor.read_radar_sensor(register_address=0x0001)
-                    #messuredRadar_Liq_telem = Radar_Sensor.read_radar_sensor(register_address=0x0003)
                     print(f'Radar Messuring Height: {messuredRadar_Air_telem}')
                 else:
                     print("RadarOFF", radarSensorActive)
@@ -348,8 +326,14 @@ def main():
             
             # Main Logic
             if autoSwitch:
-                ph_control.set_measured_ph(measuredPHValue_telem)
-                ph_control.set_pump_switch(True)
+                pumpRelaySwSig = pumpRelaySw
+                co2RelaisSwSig = co2RelaisSw
+                co2HeatingRelaySwSig = co2HeatingRelaySw
+                #ph_control.set_pump_switch(co2RelaisSw)
+                #pumpRelaySwSig = ph_control.get_pump_switch()
+                #co2RelaisSwSig = ph_control.get_co2_valve_switch()
+                
+                #co2RelaisSwSig = True
                 #print("ph_control.set_pump_switch(True)", ph_control.set_pump_switch)
                 #time.sleep(1)
                 print("automode ON", autoSwitch)
@@ -357,9 +341,12 @@ def main():
                 #time.sleep(1)
                 print("automode OFF", autoSwitch)
         else:
-            print("Power Switch OFF.", powerSwitch)
-            ph_control.set_pump_switch(False)
-            ph_control.set_co2_valve_switch(False)
+            print("Power Switch OFF.", powerButton)
+            #ph_control.set_pump_switch(False)
+            #ph_control.set_co2_valve_switch(False)
+            #co2RelaisSwSig = False
+            #pumpRelaySwSig = False
+            #co2HeatingRelaySwSig = False
             #autoSwitch = False
         time.sleep(2)
 
