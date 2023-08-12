@@ -1,4 +1,3 @@
-"""
 # -----------------------------------------------------------------------------
 # Company: KARIM Technologies
 # Author: Sayed Amir Karim
@@ -7,18 +6,15 @@
 # License: All Rights Reserved
 #
 # Module: PHControl
-# Version: 1.0
+# Version: 1.1
 # Description: Dieses Modul stellt die PHControl-Klasse bereit, die eine
 # automatisierte Kontrolle des pH-Wertes in einem System ermöglicht. Sie
 # ermöglicht die automatische Regelung eines CO2-Ventils und einer Pumpe
 # basierend auf dem gemessenen pH-Wert und Benutzereingaben. 
 # -----------------------------------------------------------------------------
-"""
-
 
 import time
 import threading
-from gpiocontrol import GPIOControl
 
 class PHControl:
     def __init__(self, min_ph, max_ph, check_timer, on_delay_timer, pump_start_delay=0):
@@ -29,15 +25,9 @@ class PHControl:
         self.pump_start_delay = pump_start_delay
         self.measured_ph = None
         self.pump_switch = False
-        self.co2_valve_switch = None  # Neue Variable für die manuelle CO2-Ventilsteuerung
-        self.co2_valve = GPIOControl(6)  # CO2-Ventil ist auf GPIO 6
-        self.pump = GPIOControl(7)  # Pumpe ist auf GPIO 7
-        self.co2_valve.set_direction('out')
-        self.pump.set_direction('out')
-
-        # Alle GPIOs zur Sicherheit auf "Aus" setzen
-        self.co2_valve.set_value('1')
-        self.pump.set_value('1')
+        self.co2_valve_switch = None
+        self.co2_valve_status = False
+        self.pump_status = False
 
         # Starte den Hintergrundthread
         threading.Thread(target=self.control_loop, daemon=True).start()
@@ -60,29 +50,31 @@ class PHControl:
     def get_co2_valve_switch(self):
         return self.co2_valve_switch
 
+    def get_co2_valve_status(self):
+        return self.co2_valve_status
+
+    def get_pump_status(self):
+        return self.pump_status
+
     def control_loop(self):
         while True:
             # Steuerung der Pumpe
             if self.pump_switch:
                 time.sleep(self.pump_start_delay)
-                self.pump.set_value('0')  # Pumpe ein
+                self.pump_status = True
             else:
-                self.pump.set_value('1')  # Pumpe aus
+                self.pump_status = False
 
             # Manuelle Steuerung des CO2-Ventils
             if self.co2_valve_switch is not None:
-                if self.co2_valve_switch:
-                    self.co2_valve.set_value('0')  # CO2-Ventil ein
-                else:
-                    self.co2_valve.set_value('1')  # CO2-Ventil aus
+                self.co2_valve_status = self.co2_valve_switch
             # Automatische Steuerung des CO2-Ventils
             elif self.measured_ph is not None and self.measured_ph > self.max_ph:
                 time.sleep(self.on_delay_timer)
 
                 # Nach der Wartezeit, überprüfen wir erneut den PH-Wert
                 if self.measured_ph > self.max_ph:
-                    # CO2 Ventil einschalten (0 = Ein)
-                    self.co2_valve.set_value('0')
+                    self.co2_valve_status = True
 
                     # Kontinuierliche Überprüfung, ob der PH-Wert sinkt
                     while self.measured_ph > self.max_ph:
@@ -91,12 +83,10 @@ class PHControl:
                     # Sobald der PH-Wert unter dem max_ph liegt, starten wir den check_timer
                     start_time = time.time()
                     while time.time() - start_time < self.check_timer:
-                        # Wenn der PH-Wert während der check_timer Zeit wieder steigt, brechen wir ab und starten von vorne
                         if self.measured_ph > self.max_ph:
                             break
                         time.sleep(1)
                     else:
-                        # CO2 Ventil ausschalten (1 = Aus)
-                        self.co2_valve.set_value('1')
+                        self.co2_valve_status = False
 
             time.sleep(1)
