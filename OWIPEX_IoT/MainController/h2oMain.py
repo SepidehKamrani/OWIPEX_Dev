@@ -10,13 +10,9 @@ from time import sleep
 from ph_control import PHControl
 from FlowCalculation import FlowCalculation
 
-
-
 ACCESS_TOKEN = "buyj4qVjjCWd1Zvp4onK"  # Replace this with your actual access token
 THINGSBOARD_SERVER = 'localhost'  # Replace with your Thingsboard server address
 THINGSBOARD_PORT = 1883
-
-
 
 #RS485 Comunication and Devices
 # Create DeviceManager
@@ -24,68 +20,95 @@ dev_manager = DeviceManager(port='/dev/ttymxc3', baudrate=9600, parity='N', stop
 dev_manager.add_device(device_id=0x01)
 dev_manager.add_device(device_id=0x02)
 dev_manager.add_device(device_id=0x03)
-
 # Get devices and read their registers
 Radar_Sensor = dev_manager.get_device(device_id=0x01)
 Trub_Sensor = dev_manager.get_device(device_id=0x02)
 PH_Sensor = dev_manager.get_device(device_id=0x03)
-
 #logging.basicConfig(level=logging.DEBUG)
-
 client = None
 
-global_vars = {
-    'calculatedFlowRate': 1.0,
-    'powerButton': False,
-    'autoSwitch': False,
-    'callGpsSwitch': False,
-    'co2RelaisSw': False,
-    'pumpRelaySw': False,
-    'co2HeatingRelaySw': False,
-    'co2RelaisSwSig': False,
-    'pumpRelaySwSig': False,
-    'co2HeatingRelaySwSig': False,
-    # PH
-    'minimumPHValue': "",
-    'maximumPHValue': "",
-    'PHValueOffset': "",
-    'temperaturPHSens_telem': 0,
-    'measuredPHValue_telem': 0,
-    # Trueb
-    'measuredTurbidity': "",
-    'maximumTurbidity': "",
-    'turbiditySensorActive': "",
-    'turbidityOffset': "",
-    'measuredTurbidity_telem': 0,
-    # Radar
-    'waterLevelHeight': 1.0,
-    'waterLevelHeight_telem': 2.0,
-    'messuredRadar_Air_telem': 1,
-    'radarSensorActive': False,
-    'radarSensorOffset': 0.0,
-    # Flow
-    'flow_rate_l_min': 20.0,
-    'flow_rate_l_h': 20.0,
-    'flow_rate_m3_min': 20.0,
-    # GPS
-    'gpsTimestamp': 1.0,
-    'gpsLatitude': 1.0,
-    'gpsLongitude': 1.0,
-    'gpsHeight': 1.0
-}
+# Global Variables
+#Machine 
+calculatedFlowRate = 1.0
+powerButton = False
+autoSwitch = False
+callGpsSwitch = False
+co2RelaisSw = False
+pumpRelaySw = False
+co2HeatingRelaySw = False
+co2RelaisSwSig = False
+pumpRelaySwSig = False
+co2HeatingRelaySwSig = False
+#PH
+minimumPHValue = 6.8
+minimumPHValueStop = 6.5
+maximumPHValue = 7.8
+ph_low_delay_start_time = None
+ph_low_delay_duration = 10  
+ph_high_delay_start_time = None
+ph_high_delay_duration = 10  # Beispiel: 10 Sekunden Verzögerung
 
-
+PHValueOffset = 0.0
+temperaturPHSens_telem = 0.0
+measuredPHValue_telem = 0.0
+#Trueb
+measuredTurbidity = 0
+maximumTurbidity = 0
+turbiditySensorActive = False
+turbidityOffset = 0
+measuredTurbidity_telem = 0
+#Radar
+waterLevelHeight = 1.0
+waterLevelHeight_telem = 2.0
+messuredRadar_Air_telem = 1 
+radarSensorActive = False
+radarSensorOffset = 0.0
+#Flow
+flow_rate_l_min = 20.0
+flow_rate_l_h = 20.0
+flow_rate_m3_min = 20.0
+#GPS
+gpsTimestamp = 1.0
+gpsLatitude = 1.0
+gpsLongitude = 1.0
+gpsHeight = 1.0
 
 # Callback function that will be called when the value of our Shared Attribute changes
 def attribute_callback(result, _):
-    global global_vars
+    global minimumPHValue, minimumPHValueStop, maximumPHValue, PHValueOffset, maximumTurbidity, turbiditySensorActive, turbidityOffset, radarSensorActive, radarOffset, autoSwitch, callGpsSwitch, powerButton, co2RelaisSw, co2HeatingRelaySw, pumpRelaySw
     print(result)
-    for key in result:
-        if key in global_vars:
-            global_vars[key] = result[key]
-         
-    
-
+    #machine
+    if 'autoSwitch' in result:
+        autoSwitch = result['autoSwitch']
+    if 'callGpsSwitch' in result:
+        callGpsSwitch = result['callGpsSwitch']
+    if 'minimumPHValue' in result:
+        minimumPHValue = result['minimumPHValue']
+    if 'minimumPHValueStop' in result:
+        minimumPHValueStop = result['minimumPHValueStop']    
+    if 'maximumPHValue' in result:
+        maximumPHValue = result['maximumPHValue']
+    if 'PHValueOffset' in result:
+        PHValueOffset = result['PHValueOffset']
+    if 'maximumTurbidity' in result:
+        maximumTurbidity = result['maximumTurbidity']
+    if 'turbiditySensorActive' in result:
+        turbiditySensorActive = result['turbiditySensorActive']
+    if 'turbidityOffset' in result:
+        turbidityOffset = result['turbidityOffset']
+    if 'radarSensorActive' in result:
+        radarSensorActive = result['radarSensorActive']
+    if 'radarOffset' in result:
+        radarOffset = result['radarOffset']
+    if 'powerButton' in result:
+        powerButton = result['powerButton']   
+    if 'co2RelaisSw' in result:
+        co2RelaisSw = result['co2RelaisSw']   
+    if 'pumpRelaySw' in result:
+        pumpRelaySw = result['pumpRelaySw']
+    if 'co2HeatingRelaySw' in result:
+        co2HeatingRelaySw = result['co2HeatingRelaySw']    
+        
 # Callback function that will be called when an RPC request is received
 def rpc_callback(id, request_body):
     print(request_body)
@@ -112,11 +135,9 @@ def get_data():
     
     #calculate tank volumes
 
-
     attributes = {
         'ip_address': ip_address,
         'macaddress': mac_address
-
     }
     telemetry = {
         #hardware PC
@@ -134,7 +155,6 @@ def get_data():
         'co2RelaisSwSig': co2RelaisSwSig,
         'co2HeatingRelaySwSig': co2HeatingRelaySwSig,
         'pumpRelaySwSig': pumpRelaySwSig,
-  
         #PH Sens
         'measuredPHValue_telem': measuredPHValue_telem,
         'temperaturPHSens_telem': temperaturPHSens_telem,
@@ -142,16 +162,13 @@ def get_data():
         'gpsLatitude': gpsLatitude,
         'gpsLongitude': gpsLongitude,
         'gpsHeight': gpsHeight,
-
         'messuredRadar_Air_telem': messuredRadar_Air_telem,
-
         'flow_rate_l_min': flow_rate_l_min,
         'flow_rate_l_h': flow_rate_l_h,
         'flow_rate_m3_min': flow_rate_m3_min
     }
     print(attributes, telemetry)
     return attributes, telemetry
-
 
 def sync_state(result, exception=None):
     global powerButton
@@ -172,7 +189,6 @@ def main():
     ph_control = PHControl(min_ph=5.0, max_ph=8.0, check_timer=5, on_delay_timer=5)
     ph_control.set_pump_delay(1)
     
-    
     # Pfad zur Kalibrierungsdatei
     calibration_file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "calibration_data.json")
 
@@ -183,17 +199,35 @@ def main():
     zero_ref = flow_calc.get_zero_reference()
     print(f"Zero Reference: {zero_ref}")
 
-
-    # Define shared keys
-shared_keys = ['minimumPHValue', 'maximumPHValue', 'PHValueOffset', 'maximumTurbidity', 'turbiditySensorActive', 'turbidityOffset', 'radarSensorActive', 'alarmActiveMachine', 'alarmMessageMachine', 'resetAlarm', 'autoSwitch', 'callGpsSwitch', 'powerButton', 'co2RelaisSwSig']
-
-# Request shared attributes
-client.request_attributes(shared_keys=shared_keys, callback=attribute_callback)
-
-# Subscribe to individual attributes using the shared_keys list
-for key in shared_keys:
-    client.subscribe_to_attribute(key, attribute_callback)
+    # Request shared attributes
+    client.request_attributes(shared_keys=['minimumPHValue', 'minimumPHValueStop', 'maximumPHValue', 'PHValueOffset', 'maximumTurbidity', 'turbiditySensorActive', 'turbidityOffset', 'radarSensorActive', 'alarmActiveMachine', 'alarmMessageMachine', 'resetAlarm', 'autoSwitch', 'callGpsSwitch', 'powerButton', 'co2RelaisSwSig'], callback=attribute_callback)
     
+    # Subscribe to individual attributes
+    #machine
+    client.subscribe_to_attribute("", attribute_callback)
+    client.subscribe_to_attribute("autoSwitch", attribute_callback)
+    client.subscribe_to_attribute('powerButton', attribute_callback)
+    client.subscribe_to_attribute("co2RelaisSw", attribute_callback)
+    client.subscribe_to_attribute("pumpRelaySw", attribute_callback)
+    client.subscribe_to_attribute("co2HeatingRelaySw", attribute_callback)
+    #PH
+    client.subscribe_to_attribute('minimumPHValue', attribute_callback)
+    client.subscribe_to_attribute('minimumPHValueStop', attribute_callback)
+    client.subscribe_to_attribute('maximumPHValue', attribute_callback)
+    client.subscribe_to_attribute('PHValueOffset', attribute_callback)
+    #Tuerb
+    client.subscribe_to_attribute('maximumTurbidity', attribute_callback)
+    client.subscribe_to_attribute('turbiditySensorActive', attribute_callback)
+    client.subscribe_to_attribute('turbidityOffset', attribute_callback)
+    #Radar
+    client.subscribe_to_attribute('radarSensorActive', attribute_callback)
+     
+    'Alarm'
+    client.subscribe_to_attribute('alarmActiveMachine', attribute_callback)
+    client.subscribe_to_attribute('alarmMessageMachine', attribute_callback)
+    client.subscribe_to_attribute('resetAlarm', attribute_callback)
+    #GPS
+    client.subscribe_to_attribute("callGpsSwitch", attribute_callback)
 
     # Now rpc_callback will process rpc requests from the server
     client.set_server_side_rpc_request_handler(rpc_callback)
@@ -204,9 +238,7 @@ for key in shared_keys:
         client.send_telemetry(telemetry)
         
         waterLevelHeight_telem = zero_ref - messuredRadar_Air_telem
-        ph_control.set_measured_ph(measuredPHValue_telem)
         
-
         # Berechne den Durchfluss für eine bestimmte Wasserhöhe
         water_level = waterLevelHeight_telem  # in mm
         flow_rate = flow_calc.calculate_flow_rate(water_level)
@@ -216,6 +248,21 @@ for key in shared_keys:
         flow_rate_l_min = flow_calc.convert_to_liters_per_minute(flow_rate)
         flow_rate_l_h = flow_calc.convert_to_liters_per_hour(flow_rate)
         flow_rate_m3_min = flow_calc.convert_to_cubic_meters_per_minute(flow_rate)
+
+        if pumpRelaySw:
+            pumpRelaySwSig = False
+        else:
+            pumpRelaySwSig = True
+
+        if co2RelaisSw:
+            co2RelaisSwSig = False
+        else: 
+            co2RelaisSwSig = True
+
+        if co2HeatingRelaySw:
+            co2HeatingRelaySwSig = False
+        else: 
+            co2HeatingRelaySwSig = True
 
         #GPS DATA
         #Call GPS Data. Can be called even whitout power Switch. 
@@ -233,25 +280,20 @@ for key in shared_keys:
                 print(f"Breitengrad: {latitude}")
                 print(f"Längengrad: {longitude}")
                 print(f"Höhe: {altitude if altitude is not None else 'nicht verfügbar'}")
-                #callGpsSwitch = False
+
             else:
                 print("Keine GPS-Daten verfügbar.", callGpsSwitch)
                 
         else:
             print("GPS-Aufruf ist deaktiviert.", callGpsSwitch)  
 
-        #Main power switch if
         if powerButton:
-
             try:
-                # Start auto read
-                # Read temperatures
                 measuredPHValue_telem = PH_Sensor.read_register(start_address=0x0001, register_count=2)
                 temperaturPHSens_telem = PH_Sensor.read_register(start_address=0x0003, register_count=2)
                 print(f'PH: {measuredPHValue_telem}, Temperature PH Sens: {temperaturPHSens_telem}')
 
                 if turbiditySensorActive:
-                    # Read other values
                     measuredTurbidity_telem = Trub_Sensor.read_register(start_address=0x0001, register_count=2)
                     tempTruebSens = Trub_Sensor.read_register(start_address=0x0003, register_count=2)
                     print(f'Trueb: {measuredTurbidity_telem}, Trueb Temp Sens: {tempTruebSens}')   
@@ -259,28 +301,61 @@ for key in shared_keys:
                     print("TruebOFF", turbiditySensorActive)
  
                 if radarSensorActive:
-                    # Read other values
                     messuredRadar_Air_telem = Radar_Sensor.read_radar_sensor(register_address=0x0001)
                     print(f'Radar Messuring Height: {messuredRadar_Air_telem}')
                 else:
                     print("RadarOFF", radarSensorActive)
-
             except Exception as e:
                 print(f"An error occurred: {e}")
-            #END RS485 CALL
-            
-            # Main Logic
+           
+# Main Logic
             if autoSwitch:
-                pumpRelaySwSig = pumpRelaySw
-                co2RelaisSwSig = co2RelaisSw
-                co2HeatingRelaySwSig = co2HeatingRelaySw
+                measuredRadar_Air_telem = Radar_Sensor.read_radar_sensor(register_address=0x0001)
                 print("automode ON", autoSwitch)
+                print(f'Radar Messuring Height: {measuredRadar_Air_telem}')
+                
+                # Verzögerungslogik für niedrigen pH-Wert
+                if measuredPHValue_telem < minimumPHValueStop:
+                    if ph_low_delay_start_time is None:
+                        ph_low_delay_start_time = time.time()  # Zeitpunkt festlegen, wenn die Bedingung zum ersten Mal wahr wird
+                    elif time.time() - ph_low_delay_start_time >= ph_low_delay_duration:
+                        pumpRelaySw = False
+                        co2RelaisSw = False
+                        co2HeatingRelaySw = False
+                else:
+                    ph_low_delay_start_time = None  # Zurücksetzen der Verzögerung, wenn die Bedingung nicht mehr wahr ist
+                
+                # Verzögerungslogik für hohen pH-Wert
+                if measuredPHValue_telem > maximumPHValue:
+                    if ph_high_delay_start_time is None:
+                        ph_high_delay_start_time = time.time()  # Zeitpunkt festlegen, wenn die Bedingung zum ersten Mal wahr wird
+                    elif time.time() - ph_high_delay_start_time >= ph_high_delay_duration:
+                        pumpRelaySw = False
+                        co2RelaisSw = False
+                        co2HeatingRelaySw = False
+                else:
+                    ph_high_delay_start_time = None  # Zurücksetzen der Verzögerung, wenn die Bedingung nicht mehr wahr ist
+
+                # Ihre bisherige Logik
+                if measuredPHValue_telem >= minimumPHValue and measuredPHValue_telem <= maximumPHValue:
+                    pumpRelaySw = True
+
+                if measuredPHValue_telem > maximumPHValue:
+                    pumpRelaySw = True
+                    co2RelaisSw = True
+                    co2HeatingRelaySw = True
+
+                if measuredPHValue_telem < minimumPHValue:
+                    pumpRelaySw = True
+                    co2RelaisSw = False
+                    co2HeatingRelaySw = False 
+                
             else:
-                #time.sleep(1)
                 print("automode OFF", autoSwitch)
         else:
             print("Power Switch OFF.", powerButton)
-        time.sleep(2)
+
+        time.sleep(5)
 
 
 if __name__ == '__main__':
