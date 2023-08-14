@@ -1,0 +1,44 @@
+Erstellen Sie eine Systemd-Service-Datei:
+
+Beginnen wir damit, eine systemd Service-Datei zu erstellen.
+
+Öffnen Sie einen Texteditor (zum Beispiel nano) mit Root-Rechten:
+
+sudo nano /etc/systemd/system/h2o.service
+
+Fügen Sie den folgenden Inhalt in den Editor ein:
+
+[Unit]
+Description=H2O Script Service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /home/trueb/v0_8/h2o.py
+Restart=always
+User=owipex
+
+[Install]
+WantedBy=multi-user.target
+
+
+
+
+
+Aktivieren Sie den Systemd-Service:
+Damit systemd beim Booten den Service kennt und startet, aktivieren Sie ihn:
+
+sudo systemctl enable h2o
+
+
+(Optional) Starten Sie den Service sofort:
+Wenn Sie den Service sofort starten möchten, ohne das System neu zu starten, können Sie:
+sudo systemctl start h2o
+
+
+Überprüfen Sie den Status:
+Sie können den Status Ihres Dienstes jederzeit überprüfen mit:
+sudo systemctl status h2o
+
+
+
+

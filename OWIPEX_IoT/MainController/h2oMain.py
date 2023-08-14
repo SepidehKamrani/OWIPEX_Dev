@@ -350,12 +350,13 @@ def main():
                 if autoSwitch:
                     if measuredPHValue_telem >= minimumPHValue and measuredPHValue_telem <= maximumPHValue:
                         pumpRelaySw = True
+                        co2RelaisSw = False
                     elif measuredPHValue_telem > maximumPHValue:
-                        pumpRelaySw = True
+                        pumpRelaySw = False
                         co2RelaisSw = True
                         co2HeatingRelaySw = True
                     elif measuredPHValue_telem < minimumPHValue:
-                        pumpRelaySw = True
+                        pumpRelaySw = False
                         co2RelaisSw = False
                         co2HeatingRelaySw = False        
             else:
