@@ -7,7 +7,6 @@ import json
 from tb_gateway_mqtt import TBDeviceMqttClient
 from modbus_lib import DeviceManager
 from time import sleep
-from ph_control import PHControl
 from FlowCalculation import FlowCalculation
 
 ACCESS_TOKEN = "buyj4qVjjCWd1Zvp4onK"  # Replace this with your actual access token
@@ -73,7 +72,7 @@ gpsHeight = 1.0
 
 # Callback function that will be called when the value of our Shared Attribute changes
 def attribute_callback(result, _):
-    global minimumPHValue, minimumPHValueStop, ph_low_delay_start_time, ph_high_delay_duration, maximumPHValue, PHValueOffset, maximumTurbidity, turbiditySensorActive, turbidityOffset, radarSensorActive, radarOffset, autoSwitch, callGpsSwitch, powerButton, co2RelaisSw, co2HeatingRelaySw, pumpRelaySw
+    global minimumPHValue, minimumPHValueStop, ph_low_delay_duration, ph_high_delay_duration, maximumPHValue, PHValueOffset, maximumTurbidity, turbiditySensorActive, turbidityOffset, radarSensorActive, radarOffset, autoSwitch, callGpsSwitch, powerButton, co2RelaisSw, co2HeatingRelaySw, pumpRelaySw
     print(result)
     #machine
     if 'autoSwitch' in result:
@@ -179,6 +178,17 @@ def sync_state(result, exception=None):
     else:
         period = result.get('shared', {'powerButton': False})['powerButton']
 
+class PHSensorReader:
+    def __init__(self, sensor):
+        self.sensor = sensor
+
+    def read_ph_value(self):
+        return self.sensor.read_register(start_address=0x0001, register_count=2)
+
+    def read_temperature(self):
+        return self.sensor.read_register(start_address=0x0003, register_count=2)
+
+
 
 def main():
     #def Global Variables for Main Funktion
@@ -191,10 +201,6 @@ def main():
     client.connect()
     client.request_attributes(shared_keys=['powerButton'], callback=sync_state)
 
-    # Erstellt ein PHControl-Objekt
-    ph_control = PHControl(min_ph=5.0, max_ph=8.0, check_timer=5, on_delay_timer=5)
-    ph_control.set_pump_delay(1)
-    
     # Pfad zur Kalibrierungsdatei
     calibration_file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "calibration_data.json")
 
@@ -264,12 +270,10 @@ def main():
             pumpRelaySwSig = False
         else:
             pumpRelaySwSig = True
-
         if co2RelaisSw:
             co2RelaisSwSig = False
         else: 
             co2RelaisSwSig = True
-
         if co2HeatingRelaySw:
             co2HeatingRelaySwSig = False
         else: 
