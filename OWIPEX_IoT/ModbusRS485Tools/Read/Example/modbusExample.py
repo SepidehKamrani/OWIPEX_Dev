@@ -30,7 +30,7 @@ PH_Sensor = dev_manager.get_device(device_id=0x03)
 # Read radar sensor values
 air_height = Radar_Sensor.read_radar_sensor(register_address=0x0000)
 liquid_level = Radar_Sensor.read_radar_sensor(register_address=0x0002)
-print(f'Air Height: {air_height} cm, Liquid Level: {liquid_level} cm')
+print(f'Air Height: {air_height} mm')
 
 # Read temperatures
 tempPHSens = PH_Sensor.read_register(start_address=0x0003, register_count=2)

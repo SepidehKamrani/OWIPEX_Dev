@@ -14,101 +14,25 @@ THINGSBOARD_SERVER = 'localhost'  # Replace with your Thingsboard server address
 THINGSBOARD_PORT = 1883
 
 #RS485 Comunication and Devices
-
+# Create DeviceManager
 dev_manager = DeviceManager(port='/dev/ttymxc3', baudrate=9600, parity='N', stopbits=1, bytesize=8, timeout=1)
 dev_manager.add_device(device_id=0x01)
 dev_manager.add_device(device_id=0x02)
 dev_manager.add_device(device_id=0x03)
+# Get devices and read their registers
 Radar_Sensor = dev_manager.get_device(device_id=0x01)
 Trub_Sensor = dev_manager.get_device(device_id=0x02)
 PH_Sensor = dev_manager.get_device(device_id=0x03)
 #logging.basicConfig(level=logging.DEBUG)
 client = None
 
-# Global Variables
-#Machine 
-calculatedFlowRate = 1.0
-powerButton = False
-autoSwitch = False
-callGpsSwitch = False
-co2RelaisSw = False
-pumpRelaySw = False
-co2HeatingRelaySw = False
-co2RelaisSwSig = False
-pumpRelaySwSig = False
-co2HeatingRelaySwSig = False
-#PH
-minimumPHValue = 6.8
-minimumPHValueStop = 6.5
-maximumPHValue = 7.8
-ph_low_delay_duration = 60  #in sek
-ph_high_delay_duration = 60  #in sek
+from config import *, telemetry_keys, attributes_keys
 
-PHValueOffset = 0.0
-temperaturPHSens_telem = 0.0
-measuredPHValue_telem = 0.0
-#Trueb
-measuredTurbidity = 0
-maximumTurbidity = 0
-turbiditySensorActive = False
-turbidityOffset = 0
-measuredTurbidity_telem = 0
-#Radar
-waterLevelHeight = 1.0
-waterLevelHeight_telem = 2.0
-messuredRadar_Air_telem = 1 
-radarSensorActive = False
-radarSensorOffset = 0.0
-#Flow
-flow_rate_l_min = 20.0
-flow_rate_l_h = 20.0
-flow_rate_m3_min = 20.0
-#GPS
-gpsTimestamp = 1.0
-gpsLatitude = 1.0
-gpsLongitude = 1.0
-gpsHeight = 1.0
-
-# Callback function that will be called when the value of our Shared Attribute changes
+ #that will be called when the value of our Shared Attribute changes
 def attribute_callback(result, _):
-    global minimumPHValue, minimumPHValueStop, ph_low_delay_duration, ph_high_delay_duration, maximumPHValue, PHValueOffset, maximumTurbidity, turbiditySensorActive, turbidityOffset, radarSensorActive, radarOffset, autoSwitch, callGpsSwitch, powerButton, co2RelaisSw, co2HeatingRelaySw, pumpRelaySw
+    globals().update({key: result[key] for key in result if key in globals()})
     print(result)
-    #machine
-    if 'autoSwitch' in result:
-        autoSwitch = result['autoSwitch']
-    if 'callGpsSwitch' in result:
-        callGpsSwitch = result['callGpsSwitch']
-    if 'minimumPHValue' in result:
-        minimumPHValue = result['minimumPHValue']
-    if 'minimumPHValueStop' in result:
-        minimumPHValueStop = result['minimumPHValueStop']   
-    if 'ph_low_delay_duration' in result:
-        ph_low_delay_duration = result['ph_low_delay_duration']   
-    if 'ph_high_delay_duration' in result:
-        ph_high_delay_duration = result['ph_high_delay_duration']           
-    if 'maximumPHValue' in result:
-        maximumPHValue = result['maximumPHValue']
-    if 'PHValueOffset' in result:
-        PHValueOffset = result['PHValueOffset']
-    if 'maximumTurbidity' in result:
-        maximumTurbidity = result['maximumTurbidity']
-    if 'turbiditySensorActive' in result:
-        turbiditySensorActive = result['turbiditySensorActive']
-    if 'turbidityOffset' in result:
-        turbidityOffset = result['turbidityOffset']
-    if 'radarSensorActive' in result:
-        radarSensorActive = result['radarSensorActive']
-    if 'radarOffset' in result:
-        radarOffset = result['radarOffset']
-    if 'powerButton' in result:
-        powerButton = result['powerButton']   
-    if 'co2RelaisSw' in result:
-        co2RelaisSw = result['co2RelaisSw']   
-    if 'pumpRelaySw' in result:
-        pumpRelaySw = result['pumpRelaySw']
-    if 'co2HeatingRelaySw' in result:
-        co2HeatingRelaySw = result['co2HeatingRelaySw']    
-        
+
 # Callback function that will be called when an RPC request is received
 def rpc_callback(id, request_body):
     print(request_body)
@@ -120,14 +44,14 @@ def rpc_callback(id, request_body):
     else:
         print('Unknown method: ' + method)
 
+
 def get_data():
-    global temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, gpsTimestamp, gpsLatitude, gpsLongitude, gpsHeight, messuredRadar_Air_telem, flow_rate_l_min, flow_rate_l_h, flow_rate_m3_min, co2HeatingRelaySwSig, pumpRelaySwSig, co2RelaisSwSig 
-    cpu_usage = round(float(os.popen('''grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage }' ''').readline().replace('\n', '').replace(',', '.')), 2)
-    ip_address = os.popen('''hostname -I''').readline().replace('\n', '').replace(',', '.')[:-1]
-    mac_address = os.popen('''cat /sys/class/net/*/address''').readline().replace('\n', '').replace(',', '.')
-    processes_count = os.popen('''ps -Al | grep -c bash''').readline().replace('\n', '').replace(',', '.')[:-1]
-    swap_memory_usage = os.popen("free -m | grep Swap | awk '{print ($3/$2)*100}'").readline().replace('\n', '').replace(',', '.')[:-1]
-    ram_usage = float(os.popen("free -m | grep Mem | awk '{print ($3/$2) * 100}'").readline().replace('\n', '').replace(',', '.')[:-1])
+    cpu_usage = round(float(os.popen('''grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage }' ''').readline().replace('', '').replace(',', '.')), 2)
+    ip_address = os.popen('''hostname -I''').readline().replace('', '').replace(',', '.')[:-1]
+    mac_address = os.popen('''cat /sys/class/net/*/address''').readline().replace('', '').replace(',', '.')
+    processes_count = os.popen('''ps -Al | grep -c bash''').readline().replace('', '').replace(',', '.')[:-1]
+    swap_memory_usage = os.popen("free -m | grep Swap | awk '{print ($3/$2)*100}'").readline().replace('', '').replace(',', '.')[:-1]
+    ram_usage = float(os.popen("free -m | grep Mem | awk '{print ($3/$2) * 100}'").readline().replace('', '').replace(',', '.')[:-1])
     st = os.statvfs('/')
     used = (st.f_blocks - st.f_bfree) * st.f_frsize
     boot_time = os.popen('uptime -p').read()[:-1]
@@ -139,34 +63,19 @@ def get_data():
         'ip_address': ip_address,
         'macaddress': mac_address
     }
-    telemetry = {
-        #hardware PC
+    telemetry = {key: globals()[key] for key in telemetry_keys if key in globals()}
+
+    # Adding static data
+    telemetry.update({
         'cpu_usage': cpu_usage,
         'processes_count': processes_count,
         'disk_usage': used,
         'RAM_usage': ram_usage,
         'swap_memory_usage': swap_memory_usage,
         'boot_time': boot_time,
-        'avg_load': avg_load,
-        #device 
-        'calculatedFlowRate': calculatedFlowRate,
-        'waterLevelHeight_telem': waterLevelHeight_telem,
-        'measuredTurbidity_telem': measuredTurbidity_telem,
-        'co2RelaisSwSig': co2RelaisSwSig,
-        'co2HeatingRelaySwSig': co2HeatingRelaySwSig,
-        'pumpRelaySwSig': pumpRelaySwSig,
-        #PH Sens
-        'measuredPHValue_telem': measuredPHValue_telem,
-        'temperaturPHSens_telem': temperaturPHSens_telem,
-        'gpsTimestamp': gpsTimestamp,
-        'gpsLatitude': gpsLatitude,
-        'gpsLongitude': gpsLongitude,
-        'gpsHeight': gpsHeight,
-        'messuredRadar_Air_telem': messuredRadar_Air_telem,
-        'flow_rate_l_min': flow_rate_l_min,
-        'flow_rate_l_h': flow_rate_l_h,
-        'flow_rate_m3_min': flow_rate_m3_min
-    }
+        'avg_load': avg_load
+    })
+    
     print(attributes, telemetry)
     return attributes, telemetry
 
@@ -180,14 +89,10 @@ def sync_state(result, exception=None):
 class PHSensorReader:
     def __init__(self, sensor):
         self.sensor = sensor
-
     def read_ph_value(self):
         return self.sensor.read_register(start_address=0x0001, register_count=2)
-
     def read_temperature(self):
         return self.sensor.read_register(start_address=0x0003, register_count=2)
-
-
 
 def main():
     #def Global Variables for Main Funktion
@@ -210,37 +115,12 @@ def main():
     zero_ref = flow_calc.get_zero_reference()
     print(f"Zero Reference: {zero_ref}")
 
-    # Request shared attributes
-    client.request_attributes(shared_keys=['minimumPHValue', 'minimumPHValueStop', 'ph_low_delay_start_time', 'ph_high_delay_duration', 'maximumPHValue', 'PHValueOffset', 'maximumTurbidity', 'turbiditySensorActive', 'turbidityOffset', 'radarSensorActive', 'alarmActiveMachine', 'alarmMessageMachine', 'resetAlarm', 'autoSwitch', 'callGpsSwitch', 'powerButton', 'co2RelaisSwSig'], callback=attribute_callback)
-    
-    # Subscribe to individual attributes
-    #machine
-    client.subscribe_to_attribute("", attribute_callback)
-    client.subscribe_to_attribute("autoSwitch", attribute_callback)
-    client.subscribe_to_attribute('powerButton', attribute_callback)
-    client.subscribe_to_attribute("co2RelaisSw", attribute_callback)
-    client.subscribe_to_attribute("pumpRelaySw", attribute_callback)
-    client.subscribe_to_attribute("co2HeatingRelaySw", attribute_callback)
-    #PH
-    client.subscribe_to_attribute('minimumPHValue', attribute_callback)
-    client.subscribe_to_attribute('minimumPHValueStop', attribute_callback)
-    client.subscribe_to_attribute('ph_low_delay_start_time', attribute_callback)
-    client.subscribe_to_attribute('ph_high_delay_duration', attribute_callback)
-    client.subscribe_to_attribute('maximumPHValue', attribute_callback)
-    client.subscribe_to_attribute('PHValueOffset', attribute_callback)
-    #Tuerb
-    client.subscribe_to_attribute('maximumTurbidity', attribute_callback)
-    client.subscribe_to_attribute('turbiditySensorActive', attribute_callback)
-    client.subscribe_to_attribute('turbidityOffset', attribute_callback)
-    #Radar
-    client.subscribe_to_attribute('radarSensorActive', attribute_callback)
-     
-    'Alarm'
-    client.subscribe_to_attribute('alarmActiveMachine', attribute_callback)
-    client.subscribe_to_attribute('alarmMessageMachine', attribute_callback)
-    client.subscribe_to_attribute('resetAlarm', attribute_callback)
-    #GPS
-    client.subscribe_to_attribute("callGpsSwitch", attribute_callback)
+# Request shared attributes
+client.request_attributes(shared_keys=shared_attributes_keys, callback=attribute_callback)
+
+# Subscribe to individual attributes using the defined lists
+for attribute in machine_attributes_keys + ph_attributes_keys + turbidity_attributes_keys + radar_attributes_keys + alarm_attributes_keys + gps_attributes_keys:
+    client.subscribe_to_attribute(attribute, attribute_callback)
 
     # Now rpc_callback will process rpc requests from the server
     client.set_server_side_rpc_request_handler(rpc_callback)
