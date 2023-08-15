@@ -168,37 +168,46 @@ class PHControl:
         self.ph_low_delay_start_time = None
         self.ph_high_delay_start_time = None
 
-    def adjust_relay_switches(self, measuredPHValue_telem, minimumPHValue, minimumPHValueStop, maximumPHValue, 
+    def adjust_relay_switches(self, measuredPHValue_telem, targetPHValue, targetPHtolerrance, 
                               ph_low_delay_duration, ph_high_delay_duration, autoSwitch):
-        # Verzögerungslogik für niedrigen pH-Wert
-        if measuredPHValue_telem < minimumPHValueStop:
-            if self.ph_low_delay_start_time is None:
-                self.ph_low_delay_start_time = time.time()
-            elif time.time() - self.ph_low_delay_start_time >= ph_low_delay_duration:
-                autoSwitch = False
-                self.ph_low_delay_start_time = None
-        else:
-            self.ph_low_delay_start_time = None
+        
+        # Berechnung der erlaubten pH-Werte
+        minimumPHValue = targetPHValue - targetPHtolerrance
+        maximumPHValue = targetPHValue + targetPHtolerrance
 
-        # Verzögerungslogik für hohen pH-Wert
-        if measuredPHValue_telem > maximumPHValue:
-            if self.ph_high_delay_start_time is None:
-                self.ph_high_delay_start_time = time.time()
-            elif time.time() - self.ph_high_delay_start_time >= ph_high_delay_duration:
-                autoSwitch = False
-                self.ph_high_delay_start_time = None
-        else:
-            self.ph_high_delay_start_time = None
+        pumpRelaySw = False
+        co2RelaisSw = False
+        co2HeatingRelaySw = False
 
-        # Standardlogik
         if autoSwitch:
-            if minimumPHValue <= measuredPHValue_telem <= maximumPHValue:
-                pumpRelaySw = True
-            elif measuredPHValue_telem > maximumPHValue:
+            # Wenn der pH-Wert außerhalb des erlaubten Fensters liegt:
+            if measuredPHValue_telem > maximumPHValue:
                 co2RelaisSw = True
                 co2HeatingRelaySw = True
+                if self.ph_high_delay_start_time is None:
+                    self.ph_high_delay_start_time = time.time()
+                elif time.time() - self.ph_high_delay_start_time >= ph_high_delay_duration:
+                    autoSwitch = False
+                    powerButton = False
+            else:
+                self.ph_high_delay_start_time = None
 
-        return pumpRelaySw, co2RelaisSw, co2HeatingRelaySw, autoSwitch
+            if measuredPHValue_telem < minimumPHValue:
+                if self.ph_low_delay_start_time is None:
+                    self.ph_low_delay_start_time = time.time()
+                elif time.time() - self.ph_low_delay_start_time >= ph_low_delay_duration:
+                    autoSwitch = False
+                    powerButton = False
+            else:
+                self.ph_low_delay_start_time = None
+
+            # Wenn der pH-Wert innerhalb des erlaubten Fensters liegt:
+            if minimumPHValue <= measuredPHValue_telem <= maximumPHValue:
+                pumpRelaySw = True
+                co2RelaisSw = False
+                co2HeatingRelaySw = False
+
+        return pumpRelaySw, co2RelaisSw, co2HeatingRelaySw, autoSwitch, powerButton
 
 
 class PHHandler:
@@ -336,9 +345,10 @@ def main():
             if autoSwitch:
                 print("automode ON", autoSwitch)
                 # Verzögerungslogik für niedrigen pH-Wert
-                pumpRelaySw, co2RelaisSw, co2HeatingRelaySw, autoSwitch = ph_control.adjust_relay_switches(
-                    measuredPHValue_telem, minimumPHValue, minimumPHValueStop, maximumPHValue, 
-                    ph_low_delay_duration, ph_high_delay_duration, autoSwitch)
+                pumpRelaySw, co2RelaisSw, co2HeatingRelaySw, autoSwitch, powerButton = ph_control.adjust_relay_switches(
+                    measuredPHValue_telem, targetPHValue, targetPHtolerrance, 
+                    ph_low_delay_duration, ph_high_delay_duration, autoSwitch, powerButton
+                )
             else:
                 print("automode OFF", autoSwitch)
         else:
