@@ -53,6 +53,8 @@ class DeviceManager:
             timeout=timeout
         )
         self.devices = {}
+        self.last_read_values = {}  # Dictionary to store last read values for each device and register
+
 
     def add_device(self, device_id):
         self.devices[device_id] = ModbusClient(self, device_id)
@@ -60,6 +62,7 @@ class DeviceManager:
     def get_device(self, device_id):
         return self.devices.get(device_id)
 
+    
     def read_register(self, device_id, start_address, register_count, data_format):
         function_code = 0x03
 
@@ -71,20 +74,36 @@ class DeviceManager:
         self.ser.write(message)
 
         response = self.ser.read(100)
+        
+        # Check if the response is at least 2 bytes long
+        if len(response) < 2:
+            print('Received response is shorter than expected')
+            return self.last_read_values.get((device_id, start_address), None)
 
         received_crc = struct.unpack('<H', response[-2:])[0]
         calculated_crc = crcmod.predefined.mkPredefinedCrcFun('modbus')(response[:-2])
         if received_crc != calculated_crc:
-            raise Exception('CRC error in response')
+            print('CRC error in response')
+            return self.last_read_values.get((device_id, start_address), None)
 
         data = response[3:-2]
         swapped_data = data[2:4] + data[0:2]
-        floating_point = struct.unpack(data_format, swapped_data)[0]
+        try:
+            floating_point = struct.unpack(data_format, swapped_data)[0]
+        except struct.error:
+            print(f'Error decoding data from device {device_id}')
+            return self.last_read_values.get((device_id, start_address), None)
 
         if floating_point is None:
-            raise Exception(f'Error reading register from device {device_id}')
+            print(f'Error reading register from device {device_id}')
+            return self.last_read_values.get((device_id, start_address), None)
+
+        # Store the read value in the last_read_values dictionary
+        self.last_read_values[(device_id, start_address)] = floating_point
 
         return floating_point
+
+
 
     def read_radar_sensor(self, device_id, register_address):
         return self.read_register(device_id, register_address, 1, data_format='>H')
