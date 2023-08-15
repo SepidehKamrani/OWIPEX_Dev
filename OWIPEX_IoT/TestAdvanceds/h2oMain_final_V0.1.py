@@ -26,7 +26,7 @@ PH_Sensor = dev_manager.get_device(device_id=0x03)
 #logging.basicConfig(level=logging.DEBUG)
 client = None
 
-from config import *, telemetry_keys, attributes_keys
+from config import *
 
  #that will be called when the value of our Shared Attribute changes
 def attribute_callback(result, _):
@@ -86,14 +86,6 @@ def sync_state(result, exception=None):
     else:
         period = result.get('shared', {'powerButton': False})['powerButton']
 
-class PHSensorReader:
-    def __init__(self, sensor):
-        self.sensor = sensor
-    def read_ph_value(self):
-        return self.sensor.read_register(start_address=0x0001, register_count=2)
-    def read_temperature(self):
-        return self.sensor.read_register(start_address=0x0003, register_count=2)
-
 def main():
     #def Global Variables for Main Funktion
     global client, autoSwitch, temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, gpsTimestamp, gpsLatitude, gpsLongitude, gpsHeight, waterLevelHeight_telem, calculatedFlowRate, messuredRadar_Air_telem, flow_rate_l_min, flow_rate_l_h, flow_rate_m3_min, co2RelaisSwSig, co2HeatingRelaySwSig, pumpRelaySwSig, co2RelaisSw, co2HeatingRelaySw, pumpRelaySw
@@ -115,12 +107,12 @@ def main():
     zero_ref = flow_calc.get_zero_reference()
     print(f"Zero Reference: {zero_ref}")
 
-# Request shared attributes
-client.request_attributes(shared_keys=shared_attributes_keys, callback=attribute_callback)
+    # Request shared attributes
+    client.request_attributes(shared_keys=shared_attributes_keys, callback=attribute_callback)
 
-# Subscribe to individual attributes using the defined lists
-for attribute in machine_attributes_keys + ph_attributes_keys + turbidity_attributes_keys + radar_attributes_keys + alarm_attributes_keys + gps_attributes_keys:
-    client.subscribe_to_attribute(attribute, attribute_callback)
+    # Subscribe to individual attributes using the defined lists
+    for attribute in machine_attributes_keys + ph_attributes_keys + turbidity_attributes_keys + radar_attributes_keys + alarm_attributes_keys + gps_attributes_keys:
+        client.subscribe_to_attribute(attribute, attribute_callback)
 
     # Now rpc_callback will process rpc requests from the server
     client.set_server_side_rpc_request_handler(rpc_callback)
@@ -256,4 +248,3 @@ if __name__ == '__main__':
         main()
     else:
         print("Please change the ACCESS_TOKEN variable to match your device access token and run the")
-#Test

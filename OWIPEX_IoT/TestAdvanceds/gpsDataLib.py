@@ -37,3 +37,5 @@ def fetch_and_process_gps_data(timeout=10):
     gps_packet = get_gps_data(timeout)
     # Verarbeiten der abgerufenen GPS-Daten und Speichern der Ergebnisse in Variablen
     return process_gps_data(gps_packet)
+
+
