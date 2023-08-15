@@ -86,9 +86,106 @@ def sync_state(result, exception=None):
     else:
         period = result.get('shared', {'powerButton': False})['powerButton']
 
+class GPSHandler:
+    def __init__(self):
+        pass  # Hier können Sie Initialisierungscode hinzufügen, falls benötigt.
+
+    def fetch_and_display_data(self, callGpsSwitch):
+        if callGpsSwitch:
+            timestamp, latitude, longitude, altitude = gpsDataLib.fetch_and_process_gps_data(timeout=10)
+            if timestamp is not None:
+                # Ausgabe der GPS-Daten für Debugging-Zwecke
+                print(f"Zeitstempel: {timestamp}")
+                print(f"Breitengrad: {latitude}")
+                print(f"Längengrad: {longitude}")
+                print(f"Höhe: {altitude if altitude is not None else 'nicht verfügbar'}")
+                return timestamp, latitude, longitude, altitude
+            else:
+                print("Keine GPS-Daten verfügbar.", callGpsSwitch)
+                return None, None, None, None
+        else:
+            print("GPS-Aufruf ist deaktiviert.", callGpsSwitch)
+            return None, None, None, None
+        
+class TurbidityHandler:
+    def __init__(self, sensor):
+        self.sensor = sensor  # Hier übergeben Sie die Trub_Sensor-Instanz
+
+    def fetch_and_display_data(self, turbiditySensorActive):
+        if turbiditySensorActive:
+            measuredTurbidity_telem = self.sensor.read_register(start_address=0x0001, register_count=2)
+            tempTruebSens = self.sensor.read_register(start_address=0x0003, register_count=2)
+            print(f'Trueb: {measuredTurbidity_telem}, Trueb Temp Sens: {tempTruebSens}')
+            return measuredTurbidity_telem, tempTruebSens
+        else:
+            print("TruebOFF", turbiditySensorActive)
+            return None, None      
+
+class PHHandler:
+    def __init__(self, sensor):
+        self.sensor = sensor  # Hier übergeben Sie die PH_Sensor-Instanz
+        self.slope = 1  # Anfangswert, wird durch Kalibrierung aktualisiert
+        self.intercept = 0  # Anfangswert, wird durch Kalibrierung aktualisiert
+
+    def fetch_and_display_data(self):
+        raw_ph_value = self.sensor.read_register(start_address=0x0001, register_count=2)
+        measuredPHValue_telem = self.correct_ph_value(raw_ph_value)
+        
+        temperaturPHSens_telem = self.sensor.read_register(start_address=0x0003, register_count=2)
+        
+        print(f'PH: {measuredPHValue_telem}, Temperature PH Sens: {temperaturPHSens_telem}')
+        return measuredPHValue_telem, temperaturPHSens_telem
+
+    def correct_ph_value(self, raw_value):
+        return self.slope * raw_value + self.intercept
+
+    def calibrate(self, high_ph_value, low_ph_value, measured_high, measured_low):
+        """
+        Kalibriert den pH-Sensor mit gegebenen Hoch- und Tiefwerten.
+
+        :param high_ph_value: Bekannter pH-Wert der High-Kalibrierlösung (z.B. 10)
+        :param low_ph_value: Bekannter pH-Wert der Low-Kalibrierlösung (z.B. 7)
+        :param measured_high: Gemessener Wert des Sensors in der High-Kalibrierlösung
+        :param measured_low: Gemessener Wert des Sensors in der Low-Kalibrierlösung
+        """
+        # Berechnung der Steigung und des y-Achsenabschnitts
+        self.slope = (high_ph_value - low_ph_value) / (measured_high - measured_low)
+        self.intercept = high_ph_value - self.slope * measured_high
+
+class FlowRateHandler:
+    def __init__(self, radar_sensor, flow_calculator, zero_reference):
+        self.radar_sensor = radar_sensor
+        self.flow_calculator = flow_calculator
+        self.zero_reference = zero_reference
+
+    def fetch_and_calculate(self):
+        measured_air_distance = self.radar_sensor.read_radar_sensor(register_address=0x0001)
+        
+        if measured_air_distance is not None:
+            water_level = self.zero_reference - measured_air_distance
+
+            # Berechne den Durchfluss für eine bestimmte Wasserhöhe
+            flow_rate = self.flow_calculator.calculate_flow_rate(water_level)
+            print(f"Flow Rate (m3/h): {flow_rate}")
+
+            # Konvertiere den Durchfluss in verschiedene Einheiten
+            flow_rate_l_min = self.flow_calculator.convert_to_liters_per_minute(flow_rate)
+            flow_rate_l_h = self.flow_calculator.convert_to_liters_per_hour(flow_rate)
+            flow_rate_m3_min = self.flow_calculator.convert_to_cubic_meters_per_minute(flow_rate)
+
+            return {
+                "water_level": water_level,
+                "flow_rate": flow_rate,
+                "flow_rate_l_min": flow_rate_l_min,
+                "flow_rate_l_h": flow_rate_l_h,
+                "flow_rate_m3_min": flow_rate_m3_min
+            }
+        else:
+            return None
+        
 def main():
     #def Global Variables for Main Funktion
-    global client, autoSwitch, temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, gpsTimestamp, gpsLatitude, gpsLongitude, gpsHeight, waterLevelHeight_telem, calculatedFlowRate, messuredRadar_Air_telem, flow_rate_l_min, flow_rate_l_h, flow_rate_m3_min, co2RelaisSwSig, co2HeatingRelaySwSig, pumpRelaySwSig, co2RelaisSw, co2HeatingRelaySw, pumpRelaySw
+    global client, tempTruebSens, calibratePH, gemessener_low_wert, gemessener_high_wert, autoSwitch, temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, gpsTimestamp, gpsLatitude, gpsLongitude, gpsHeight, waterLevelHeight_telem, calculatedFlowRate, messuredRadar_Air_telem, flow_rate_l_min, flow_rate_l_h, flow_rate_m3_min, co2RelaisSwSig, co2HeatingRelaySwSig, pumpRelaySwSig, co2RelaisSw, co2HeatingRelaySw, pumpRelaySw
 
     ph_high_delay_start_time = None
     ph_low_delay_start_time = None
@@ -99,17 +196,14 @@ def main():
 
     # Pfad zur Kalibrierungsdatei
     calibration_file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "calibration_data.json")
-
     # Erstelle eine Instanz der FlowCalculation-Klasse
     flow_calc = FlowCalculation(calibration_file_path)
-
     # Hole den 0-Referenzwert
     zero_ref = flow_calc.get_zero_reference()
     print(f"Zero Reference: {zero_ref}")
 
     # Request shared attributes
     client.request_attributes(shared_keys=shared_attributes_keys, callback=attribute_callback)
-
     # Subscribe to individual attributes using the defined lists
     for attribute in machine_attributes_keys + ph_attributes_keys + turbidity_attributes_keys + radar_attributes_keys + alarm_attributes_keys + gps_attributes_keys:
         client.subscribe_to_attribute(attribute, attribute_callback)
@@ -117,25 +211,23 @@ def main():
     # Now rpc_callback will process rpc requests from the server
     client.set_server_side_rpc_request_handler(rpc_callback)
 
+    ph_handler = PHHandler(PH_Sensor)
+    turbidity_handler = TurbidityHandler(Trub_Sensor)
+    flow_handler = FlowRateHandler(Radar_Sensor, flow_calc, zero_ref)
+    flow_data = flow_handler.fetch_and_calculate()
+
     while not client.stopped:
         attributes, telemetry = get_data()
         client.send_attributes(attributes)
         client.send_telemetry(telemetry)
-        messuredRadar_Air_telem = Radar_Sensor.read_radar_sensor(register_address=0x0001)
-        
-        if messuredRadar_Air_telem is not None:
-            waterLevelHeight_telem = zero_ref - messuredRadar_Air_telem
 
-        
-        # Berechne den Durchfluss für eine bestimmte Wasserhöhe
-        water_level = waterLevelHeight_telem  # in mm
-        flow_rate = flow_calc.calculate_flow_rate(water_level)
-        print(f"Flow Rate (m3/h): {flow_rate}")
+        if flow_data:
+            print(f"Water Level: {flow_data['water_level']} mm")
+            print(f"Flow Rate: {flow_data['flow_rate']} m3/h")
+            print(f"Flow Rate (Liters per Minute): {flow_data['flow_rate_l_min']} L/min")
+            print(f"Flow Rate (Liters per Hour): {flow_data['flow_rate_l_h']} L/h")
+            print(f"Flow Rate (Cubic Meters per Minute): {flow_data['flow_rate_m3_min']} m3/min")
 
-        # Konvertiere den Durchfluss in verschiedene Einheiten
-        flow_rate_l_min = flow_calc.convert_to_liters_per_minute(flow_rate)
-        flow_rate_l_h = flow_calc.convert_to_liters_per_hour(flow_rate)
-        flow_rate_m3_min = flow_calc.convert_to_cubic_meters_per_minute(flow_rate)
 
         if pumpRelaySw:
             pumpRelaySwSig = False
@@ -150,43 +242,19 @@ def main():
         else: 
             co2HeatingRelaySwSig = True
 
-        #GPS DATA
-        #Call GPS Data. Can be called even whitout power Switch. 
-        if callGpsSwitch:
-            # Abrufen und Verarbeiten der GPS-Daten (mit einem Timeout von 10 Sekunden)
-            timestamp, latitude, longitude, altitude = gpsDataLib.fetch_and_process_gps_data(timeout=10)
-
-            if timestamp is not None:
-                gpsTimestamp = timestamp
-                gpsLatitude = latitude
-                gpsLongitude = longitude
-                gpsHeight = altitude
-                # Ausgabe der GPS-Daten für Debugging-Zwecke
-                print(f"Zeitstempel: {timestamp}")
-                print(f"Breitengrad: {latitude}")
-                print(f"Längengrad: {longitude}")
-                print(f"Höhe: {altitude if altitude is not None else 'nicht verfügbar'}")
-
-            else:
-                print("Keine GPS-Daten verfügbar.", callGpsSwitch)
-                
-        else:
-            print("GPS-Aufruf ist deaktiviert.", callGpsSwitch)  
+        #GPS DATA 
+        gps_handler = GPSHandler()
+        gpsTimestamp, gpsLatitude, gpsLongitude, gpsHeight = gps_handler.fetch_and_display_data(callGpsSwitch) 
 
         if powerButton:
             try:
                 
-                measuredPHValue_telem = PH_Sensor.read_register(start_address=0x0001, register_count=2)
-                temperaturPHSens_telem = PH_Sensor.read_register(start_address=0x0003, register_count=2)
-                print(f'PH: {measuredPHValue_telem}, Temperature PH Sens: {temperaturPHSens_telem}')
-
-                if turbiditySensorActive:
-                    measuredTurbidity_telem = Trub_Sensor.read_register(start_address=0x0001, register_count=2)
-                    tempTruebSens = Trub_Sensor.read_register(start_address=0x0003, register_count=2)
-                    print(f'Trueb: {measuredTurbidity_telem}, Trueb Temp Sens: {tempTruebSens}')   
+                if calibratePH:
+                    ph_handler.calibrate(high_ph_value=10, low_ph_value=7, measured_high=gemessener_high_wert, measured_low=gemessener_low_wert)
+                    calibratePH = False
                 else:
-                    print("TruebOFF", turbiditySensorActive)
- 
+                    measuredPHValue_telem, temperaturPHSens_telem = ph_handler.fetch_and_display_data()  
+                    measuredTurbidity_telem, tempTruebSens = turbidity_handler.fetch_and_display_data(turbiditySensorActive)
             except Exception as e:
                 print(f"An error occurred: {e}")
            
