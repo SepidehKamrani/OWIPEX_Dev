@@ -30,6 +30,9 @@ measuredPHValue_telem = 0.0
 gemessener_high_wert = 10.00
 gemessener_low_wert = 7.00
 calibratePH = False
+targetPHValue = 7.80
+targetPHOffset = 0.20
+
 
 # Turbidity Configuration
 measuredTurbidity = 0
