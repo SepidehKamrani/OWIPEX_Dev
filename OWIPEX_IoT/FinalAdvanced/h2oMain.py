@@ -302,22 +302,27 @@ def main():
     ph_handler = PHHandler(PH_Sensor)
     ph_control = PHControl()
     turbidity_handler = TurbidityHandler(Trub_Sensor)
-    flow_rate_handler = FlowRateHandler(Radar_Sensor)
-    flow_data = flow_rate_handler.fetch_and_calculate()
     gps_handler = GPSHandler()
+    
+    if (radarSensorActive):
+        flow_rate_handler = FlowRateHandler(Radar_Sensor)
+        flow_data = flow_rate_handler.fetch_and_calculate()
+    
 
     
 
     while not client.stopped:
         attributes, telemetry = get_data()
         
-
-        if flow_data:
-            print(f"Water Level: {flow_data['water_level']} mm")
-            print(f"Flow Rate: {flow_data['flow_rate']} m3/h")
-            print(f"Flow Rate (Liters per Minute): {flow_data['flow_rate_l_min']} L/min")
-            print(f"Flow Rate (Liters per Hour): {flow_data['flow_rate_l_h']} L/h")
-            print(f"Flow Rate (Cubic Meters per Minute): {flow_data['flow_rate_m3_min']} m3/min")
+        if (radarSensorActive):
+            flow_rate_handler = FlowRateHandler(Radar_Sensor)
+            flow_data = flow_rate_handler.fetch_and_calculate()
+            if flow_data:
+                print(f"Water Level: {flow_data['water_level']} mm")
+                print(f"Flow Rate: {flow_data['flow_rate']} m3/h")
+                print(f"Flow Rate (Liters per Minute): {flow_data['flow_rate_l_min']} L/min")
+                print(f"Flow Rate (Liters per Hour): {flow_data['flow_rate_l_h']} L/h")
+                print(f"Flow Rate (Cubic Meters per Minute): {flow_data['flow_rate_m3_min']} m3/min")
 
 
         pumpRelaySwSig = not pumpRelaySw
