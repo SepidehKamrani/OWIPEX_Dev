@@ -305,6 +305,7 @@ def main():
                     print("maximumPHValue", maximumPHValue)
                     co2RelaisSw = True
                     co2HeatingRelaySw = True
+                    pumpRelaySw = False
                     if ph_high_delay_start_time is None:
                         ph_high_delay_start_time = time.time()
                     elif time.time() - ph_high_delay_start_time >= ph_high_delay_duration:
