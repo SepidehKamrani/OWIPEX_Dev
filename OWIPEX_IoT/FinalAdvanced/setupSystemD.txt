@@ -67,7 +67,7 @@ Ersetzen Sie <service-name> durch den tatsächlichen Namen Ihres Dienstes.
 Um die Echtzeit-Ausgabe des Dienstes zu verfolgen:
 
 
-sudo journalctl -u <service-name> -f
+sudo journalctl -u h2o -f
 Dieser Befehl zeigt die aktuelle Ausgabe an und aktualisiert sie fortlaufend, wenn neue Protokolleinträge hinzukommen.
 
 Wenn Ihr Skript jedoch viele Daten auf die Standardausgabe schreibt, kann die Konsolenausgabe im Journal unübersichtlich werden. In solchen Fällen könnte es sinnvoll sein, die Ausgabe des Skripts in eine separate Logdatei umzuleiten.
@@ -90,3 +90,77 @@ Aktualisieren Sie den Service und starten Sie ihn neu:
 sudo systemctl daemon-reload
 sudo systemctl restart <service-name>.service
 Nach diesen Schritten sollte die Ausgabe des Skripts sowohl im Systemjournal als auch in der Konsole während der Ausführung des Dienstes angezeigt werden. Dies erleichtert die Diagnose von Problemen und die Überwachung der Ausführung des Dienstes.
+
+
+Autostart-Datei für ein Skript erstellen (Linux):
+
+Skript vorbereiten: Stellen Sie sicher, dass Ihr Skript funktionsfähig ist.
+
+Autostart-Verzeichnis erstellen: Öffnen Sie ein Terminal und erstellen Sie das Autostart-Verzeichnis:
+
+
+mkdir -p ~/.config/autostart/
+Skript kopieren: Kopieren Sie Ihr Skript in das Autostart-Verzeichnis:
+
+
+cp autostart.py ~/.config/autostart/
+Skript ausführbar machen: Stellen Sie sicher, dass das Skript ausführbar ist:
+
+
+chmod +x ~/.config/autostart/autostart.py
+Automatischer Start: Das Skript wird nun bei jedem Anmelden automatisch ausgeführt.
+
+Bitte ersetzen Sie autostart.py durch den tatsächlichen Namen Ihres Skripts.
+
+Für zukünftige Referenzen und Anleitungen, stellen Sie sicher, dass Sie den genauen Pfad zu den Verzeichnissen verwenden und sicherstellen, dass das Skript korrekt funktioniert, bevor Sie es dem Autostart hinzufügen.
+
+
+
+/home/owipex/v1.0/autostart.py
+
+
+Erstellen Sie ein Bash-Skript namens start_autostart.sh mit folgendem Inhalt:
+#!/bin/bash
+python3 /home/owipex/v1.0/autostart.py
+
+Schritt 1: Bash-Skript erstellen
+
+Erstellen Sie ein Bash-Skript namens start_autostart.sh mit folgendem Inhalt:
+
+bash
+Copy code
+#!/bin/bash
+python3 /Pfad/zur/deiner/autostart.py
+Ersetzen Sie /Pfad/zur/deiner/autostart.py durch den tatsächlichen Pfad zu Ihrer autostart.py-Datei.
+
+Schritt 2: Bash-Skript ausführbar machen
+
+Machen Sie das Bash-Skript ausführbar:
+
+bash
+Copy code
+chmod +x start_autostart.sh
+Schritt 3: Bash-Skript zum Autostart hinzufügen
+
+Öffnen Sie das Terminal.
+
+Geben Sie den folgenden Befehl ein, um den Pfad zur .bashrc-Datei zu öffnen:
+
+bash
+Copy code
+nano ~/.bashrc
+Gehen Sie ans Ende der Datei und fügen Sie folgende Zeile hinzu:
+
+bash
+Copy code
+~/Pfad/zur/deiner/start_autostart.sh
+Ersetzen Sie ~/Pfad/zur/deiner/start_autostart.sh durch den tatsächlichen Pfad zu Ihrem Bash-Skript.
+
+Speichern Sie die Datei und schließen Sie den Texteditor.
+
+Führen Sie den Befehl aus, um die Änderungen zu übernehmen:
+
+bash
+Copy code
+source ~/.bashrc
+Das Bash-Skript start_autostart.sh wird nun jedes Mal automatisch bei der Anmeldung ausgeführt und startet Ihr Python-Skript autostart.py.
