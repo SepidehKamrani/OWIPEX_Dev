@@ -316,6 +316,9 @@ def main():
                     ph_high_delay_start_time = None
 
                 if measuredPHValue_telem < minimumPHValue:
+                    if measuredPHValue_telem < minimumPHValueStop:
+                        autoSwitch = False
+                        powerButton = False
                     if ph_low_delay_start_time is None:
                         ph_low_delay_start_time = time.time()
                     elif time.time() - ph_low_delay_start_time >= ph_low_delay_duration:
