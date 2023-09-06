@@ -64,7 +64,7 @@ service postgresql restart
 
 # Connect to PostgreSQL and create the 'thingsboard' database
 sudo -u postgres psql -d postgres -h localhost -U postgres -W <<EOF
-CREATE DATABASE thingsboard5;
+CREATE DATABASE owipex-iot-server;
 \q
 EOF
 echo "conf file rsync"
