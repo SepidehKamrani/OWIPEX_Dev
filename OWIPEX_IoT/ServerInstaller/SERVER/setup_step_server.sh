@@ -59,7 +59,7 @@ sudo apt -y install postgresql-12
 sudo service postgresql start
 
 # Switch to the postgres user and configure PostgreSQL
-sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'appunik';"
+sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'owipex!123';"
 service postgresql restart
 
 # Connect to PostgreSQL and create the 'thingsboard' database
