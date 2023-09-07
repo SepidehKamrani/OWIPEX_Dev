@@ -5,7 +5,7 @@ sudo apt-get update
 sudo apt-get install -y git sshpass
 ls
 echo "step 1"
-sshpass -p '78WDQEuz' ssh -o StrictHostKeyChecking=no root@167.172.189.151 <<EOF
+sshpass -p '78WDQEuz' ssh -o StrictHostKeyChecking=no root@157.230.101.116 <<EOF
 cd PipeLineFolder
 ls
 
@@ -60,18 +60,18 @@ sudo apt -y install postgresql-12
 sudo service postgresql start
 
 # Switch to the postgres user and configure PostgreSQL
-sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'appunik';"
+sudo -u postgres psql -c "ALTER USER postgres PASSWORD '123456';"
 service postgresql restart
 
 # Connect to PostgreSQL and create the 'thingsboard' database
 sudo -u postgres psql -d postgres -h localhost -U postgres -W <<EOF
-CREATE DATABASE thingsboard5;
+CREATE DATABASE owipex-sql;
 \q
 EOF
 echo "conf file rsync"
 rsync -va /root/PipeLineFolder/thingsboard.conf /etc/thingsboard/conf/thingsboard.conf
 echo "Database setup"
-sshpass -p '78WDQEuz' ssh -o StrictHostKeyChecking=no root@167.172.189.151 <<EOF
+sshpass -p '78WDQEuz' ssh -o StrictHostKeyChecking=no root@157.230.101.116 <<EOF
 cd ..
 sudo /usr/share/thingsboard/bin/install/install.sh --loadDemo
 EOF
