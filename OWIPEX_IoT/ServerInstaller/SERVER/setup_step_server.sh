@@ -5,7 +5,7 @@ sudo apt-get update
 sudo apt-get install -y git sshpass
 ls
 echo "step 1"
-sshpass -p '78WDQEuz' ssh -o StrictHostKeyChecking=no root@157.230.101.116 <<EOF
+sshpass -p '78WDQEuz' ssh -o StrictHostKeyChecking=no root@157.230.20.219 <<EOF
 cd PipeLineFolder
 ls
 
@@ -71,7 +71,7 @@ EOF
 echo "conf file rsync"
 rsync -va /root/PipeLineFolder/thingsboard.conf /etc/thingsboard/conf/thingsboard.conf
 echo "Database setup"
-sshpass -p '78WDQEuz' ssh -o StrictHostKeyChecking=no root@157.230.101.116 <<EOF
+sshpass -p '78WDQEuz' ssh -o StrictHostKeyChecking=no root@157.230.20.219 <<EOF
 cd ..
 sudo /usr/share/thingsboard/bin/install/install.sh --loadDemo
 EOF
