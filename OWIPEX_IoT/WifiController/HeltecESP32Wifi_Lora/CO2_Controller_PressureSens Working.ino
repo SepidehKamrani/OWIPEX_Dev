@@ -3,19 +3,20 @@
 #include <ThingsBoard.h>
 #include <DallasTemperature.h>
 
-constexpr char WIFI_SSID[] = "FamMorbius";
-constexpr char WIFI_PASSWORD[] = "45927194145938492747";
+
+//constexpr char WIFI_SSID[] = "FamMorbius";
+//constexpr char WIFI_PASSWORD[] = "45927194145938492747";
 //constexpr char THINGSBOARD_SERVER[] = "192.168.178.54";
-//constexpr char WIFI_SSID[] = "RUT240_AE4E";
-//constexpr char WIFI_PASSWORD[] = "Jj34CkNd";
-constexpr char THINGSBOARD_SERVER[] = "167.99.248.101";
-constexpr char TOKEN[] = "1234567";
+constexpr char WIFI_SSID[] = "OWIPEX_4G_0001";
+constexpr char WIFI_PASSWORD[] = "12345678";
+constexpr char THINGSBOARD_SERVER[] = "192.168.100.26";
+constexpr char TOKEN[] = "12345678";
 constexpr uint16_t THINGSBOARD_PORT = 1883U;
 constexpr uint32_t MAX_MESSAGE_SIZE = 256U;
 
 // Define the GPIO pins for your relays
-constexpr int CO2_RELAY_PIN = 34;
-constexpr int HEATING_RELAY_PIN = 35;
+constexpr int CO2_RELAY_PIN = 1;
+constexpr int HEATING_RELAY_PIN = 3;
 
 // Attribute names for attribute request and attribute updates functionality
 constexpr char CO2_RELAY_ATTR[] = "co2Relay";
@@ -69,13 +70,13 @@ void processSharedAttributes(const Shared_Attribute_Data &data) {
 const Shared_Attribute_Callback attributes_callback(SHARED_ATTRIBUTES_LIST.cbegin(), SHARED_ATTRIBUTES_LIST.cend(), &processSharedAttributes);
 
 void setup() {
-  Sensor1Wire.begin(18, 17);
-  Sensor2Wire.begin(16, 15);
+  Sensor1Wire.begin(17, 16);
+  Sensor2Wire.begin(15, 7);
   USBSerial.begin(115200);
   pinMode(CO2_RELAY_PIN, OUTPUT);
   pinMode(HEATING_RELAY_PIN, OUTPUT);
-  digitalWrite(CO2_RELAY_PIN, true);
-  digitalWrite(HEATING_RELAY_PIN, true);
+  digitalWrite(CO2_RELAY_PIN, false);
+  digitalWrite(HEATING_RELAY_PIN, false);
   delay(1000);
   InitWiFi();
 }
@@ -93,25 +94,9 @@ void loop() {
 
   float pressureBar2 = pressure2 / 100.0; // Umrechnung in Bar
 
-  USBSerial.print("Sensor 1 - Druck: ");
-  USBSerial.print(pressureBar1);
-  USBSerial.print(" bar, Temperatur: ");
-  USBSerial.print(temperature1);
-  USBSerial.println(" °C");
+  
 
-  USBSerial.print("CO2 Masse: ");
-  USBSerial.print(mass1);
-  USBSerial.println(" kg");
-
-  USBSerial.print("Sensor 2 (Kontrollsensor) - Druck: ");
-  USBSerial.print(pressureBar2);
-  USBSerial.print(" bar, Temperatur: ");
-  USBSerial.print(temperature2);
-  USBSerial.println(" °C");
-
-  //delay(1000);
-
-    if (!tb.connected()) {
+  if (!tb.connected()) {
     if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
       Serial.println("Failed to connect");
       subscribed = false;
@@ -135,10 +120,25 @@ void loop() {
     tb.sendTelemetryInt("temperature1", temperature1);  // Replace with your temperature sensor reading
     tb.sendTelemetryInt("pressure2", pressure2);  // Replace with your temperature sensor reading
     tb.sendTelemetryInt("temperature2", temperature2);  // Replace with your temperature sensor reading
-      // Replace with your temperature sensor reading
+    // Replace with your temperature sensor reading
+    USBSerial.print("Sensor 1 - Druck: ");
+    USBSerial.print(pressureBar1);
+    USBSerial.print(" bar, Temperatur: ");
+    USBSerial.print(temperature1);
+    USBSerial.println(" °C");
+
+    USBSerial.print("CO2 Masse: ");
+    USBSerial.print(mass1);
+    USBSerial.println(" kg");
+
+    USBSerial.print("Sensor 2 (Kontrollsensor) - Druck: ");
+    USBSerial.print(pressureBar2);
+    USBSerial.print(" bar, Temperatur: ");
+    USBSerial.print(temperature2);
+    USBSerial.println(" °C");
   }
 
-  
+  tb.loop();
 }
 
 float readPressure(TwoWire &wire) {

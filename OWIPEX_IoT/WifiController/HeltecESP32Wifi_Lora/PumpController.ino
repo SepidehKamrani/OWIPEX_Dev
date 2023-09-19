@@ -2,18 +2,20 @@
 #include <ThingsBoard.h>
 #include <DallasTemperature.h>
 
+
+constexpr char WIFI_SSID[] = "OWIPEX_4G_0001";
+constexpr char WIFI_PASSWORD[] = "12345678";
+constexpr char THINGSBOARD_SERVER[] = "192.168.100.26";
 //constexpr char WIFI_SSID[] = "FamMorbius";
 //constexpr char WIFI_PASSWORD[] = "45927194145938492747";
-constexpr char WIFI_SSID[] = "RUT240_AE4E";
-constexpr char WIFI_PASSWORD[] = "Jj34CkNd";
+//constexpr char THINGSBOARD_SERVER[] = "192.168.178.54";
 constexpr char TOKEN[] = "123456";
-constexpr char THINGSBOARD_SERVER[] = "192.168.1.235";
 constexpr uint16_t THINGSBOARD_PORT = 1883U;
 constexpr uint32_t MAX_MESSAGE_SIZE = 256U;
 
 // Define the GPIO pins for your relays
-constexpr int PUMP_RELAY_PIN = 33;
-constexpr int SEC_RELAY_PIN = 34;
+constexpr int PUMP_RELAY_PIN = 1;
+constexpr int SEC_RELAY_PIN = 2;
 
 // Attribute names for attribute request and attribute updates functionality
 constexpr char PUMP_RELAY_ATTR[] = "pumpRelais";
@@ -47,9 +49,9 @@ void InitWiFi() {
 void processSharedAttributes(const Shared_Attribute_Data &data) {
   for (auto it = data.begin(); it != data.end(); ++it) {
     if (strcmp(it->key().c_str(), PUMP_RELAY_ATTR) == 0) {
-      digitalWrite(PUMP_RELAY_PIN, it->value().as<bool>() ? HIGH : LOW);
+      digitalWrite(PUMP_RELAY_PIN, it->value().as<bool>() ? LOW : HIGH);
     } else if(strcmp(it->key().c_str(), SEC_RELAY_ATTR) == 0) {
-      digitalWrite(SEC_RELAY_PIN, it->value().as<bool>() ? HIGH : LOW);
+      digitalWrite(SEC_RELAY_PIN, it->value().as<bool>() ? LOW : HIGH);
     }
   }
 }
