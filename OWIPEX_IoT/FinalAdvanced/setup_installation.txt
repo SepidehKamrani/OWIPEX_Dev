@@ -19,7 +19,31 @@
 
     Nachdem Sie die Konfigurationsdatei bearbeitet haben, starten Sie den SSH-Dienst neu, um die Änderungen zu übernehmen:
     sudo systemctl restart sshd
+
+
 3. Passwort aud dem Tablet ändern: 
     Konsole: passwd
 
-4. 
+4. Libaries Installieren 
+    4.1 PIP3 Installieren    
+        apt install python3-pip
+    4.1.1 PIP3 upgraden
+        python3 -m pip install --upgrade pip
+    4.2 GPSD Python3 Libary Installieren
+        pip3 install gpsd-py3
+    4.3 mmh3 Libary installieren
+        pip3 install mmh3
+    4.4 pymmh3 installieren
+        pip3 install pymmh3
+    4.5 pyserial libary installieren
+        pip3 install pyserial
+    4.6 crcmod installieren
+        pip3 install crcmod
+    4.7 numpy installieren
+        pip3 install numpy    
+    4.8 scipy installieren
+        python3 -m pip install scipy
+
+
+
+
