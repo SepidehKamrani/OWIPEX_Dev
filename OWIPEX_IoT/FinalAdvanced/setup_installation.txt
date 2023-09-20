@@ -1,0 +1,25 @@
+1. Deutsche Tastatur auf dem Tablet Einstellen
+    Aplications ---> Settings --->Keyboard ---> Layout ---> German (English Löschen)
+
+2. SSH auf dem Tablet Installieren
+    Öffnen Sie ein Terminal und führen Sie die folgenden Befehle aus, um die alten SSH-Hostschlüssel zu entfernen und neue zu generieren:
+
+    sudo rm /etc/ssh/ssh_host_*
+    sudo dpkg-reconfigure openssh-server
+    Editieren Sie die SSHD-Konfigurationsdatei mit einem Texteditor (wie vim, nano, etc.). Im folgenden Beispiel verwende ich vim:
+
+
+    nano  /etc/ssh/sshd_config
+    Suchen Sie die Zeile, die mit „#PermitRootLogin“ beginnt, und ändern Sie sie wie folgt:
+    
+    PermitRootLogin yes
+
+    Stellen Sie sicher, dass Sie das '#' am Anfang der Zeile entfernen, um die Direktive zu aktivieren.
+    Speichern Sie die Änderungen und beenden Sie den Texteditor. (strg + X) dann mit y bestätigen und Enter
+
+    Nachdem Sie die Konfigurationsdatei bearbeitet haben, starten Sie den SSH-Dienst neu, um die Änderungen zu übernehmen:
+    sudo systemctl restart sshd
+3. Passwort aud dem Tablet ändern: 
+    Konsole: passwd
+
+4. 
