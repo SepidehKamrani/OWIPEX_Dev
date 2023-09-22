@@ -3,7 +3,7 @@
 
 # Thingsboard Server Configuration
 ACCESS_TOKEN = "buyj4qVjjCWd1Zvp4onK"
-THINGSBOARD_SERVER = 'localhost'
+THINGSBOARD_SERVER = '192.168.100.26' #Standardt IP Adresse EDGE Server
 THINGSBOARD_PORT = 1883
 
 # Machine Configuration
