@@ -66,7 +66,7 @@ gpsHeight = 1.0
 telemetry_keys = ['powerButton', 'autoSwitch', 'co2RelaisSw', 'co2HeatingRelaySw', 'pumpRelaySw', 'calculatedFlowRate', 'waterLevelHeight_telem', 'measuredTurbidity_telem', 'co2RelaisSwSig', 
                   'co2HeatingRelaySwSig', 'pumpRelaySwSig', 'measuredPHValue_telem', 'temperaturPHSens_telem', 
                   'gpsTimestamp', 'gpsLatitude', 'gpsLongitude', 'gpsHeight', 'messuredRadar_Air_telem', 
-                  'minimumPHValue', 'maximumPHValue', 'countdownPHHigh', 'countdownPHLow', 'flow_rate_l_min', 'flow_rate_l_h', 'flow_rate_m3_min']
+                  'countdownPHHigh', 'countdownPHLow', 'flow_rate_l_min', 'flow_rate_l_h', 'flow_rate_m3_min']
 
 attributes_keys = ['ip_address', 'macaddress']
 
@@ -79,7 +79,7 @@ shared_attributes_keys = ['maximumTurbidity', 'turbiditySensorActive', 'turbidit
 machine_attributes_keys = ['autoSwitch', 'powerButton', 'co2RelaisSw', 'pumpRelaySw', 'co2HeatingRelaySw']
 
 ph_attributes_keys = ['ph_low_delay_start_time', 'ph_high_delay_duration', 
-                      'PHValueOffset', 'gemessener_high_wert', 'gemessener_low_wert', 'calibratePH', 'targetPHValue', 'targetPHtolerrance']
+                      'PHValueOffset', 'gemessener_high_wert', 'gemessener_low_wert', 'calibratePH', 'targetPHValue', 'targetPHtolerrance', 'minimumPHValue', 'maximumPHValue']
 
 turbidity_attributes_keys = ['maximumTurbidity', 'turbiditySensorActive', 'turbidityOffset', 'tempTruebSens']
 
