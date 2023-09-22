@@ -65,10 +65,10 @@ gpsHeight = 1.0
 # Telemetry and Attribute Variables
 telemetry_keys = ['powerButton', 'autoSwitch', 'co2RelaisSw', 'co2HeatingRelaySw', 'pumpRelaySw', 'calculatedFlowRate', 'waterLevelHeight_telem', 'measuredTurbidity_telem', 'co2RelaisSwSig', 
                   'co2HeatingRelaySwSig', 'pumpRelaySwSig', 'measuredPHValue_telem', 'temperaturPHSens_telem', 
-                  'gpsTimestamp', 'gpsLatitude', 'gpsLongitude', 'gpsHeight', 'messuredRadar_Air_telem', 
+                  'gpsTimestamp', 'messuredRadar_Air_telem', 
                   'countdownPHHigh', 'countdownPHLow', 'flow_rate_l_min', 'flow_rate_l_h', 'flow_rate_m3_min']
 
-attributes_keys = ['ip_address', 'macaddress']
+attributes_keys = ['ip_address', 'macaddress', 'gpsLatitude', 'gpsLongitude', 'gpsHeight']
 
 
 
