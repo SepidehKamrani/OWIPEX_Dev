@@ -47,7 +47,7 @@ def load_state():
  #that will be called when the value of our Shared Attribute changes
 def attribute_callback(result, _):
     globals().update({key: result[key] for key in result if key in globals()})
-    state_to_save = {key: globals()[key] for key in all_attribute_keys}
+    state_to_save = {key: globals()[key] for key in all_attribute_keys if key in globals()}
     save_state(state_to_save)
     print(result)
 
