@@ -241,7 +241,7 @@ co2HeatingRelaySw = False
 #countdownPHHigh = ph_high_delay_duration
 #countdownPHLow = ph_low_delay_duration
 
-
+previous_power_state = False
         
 def main():
     #def Global Variables for Main Funktion
@@ -305,6 +305,9 @@ def main():
                 print(f"Flow Rate (Cubic Meters per Minute): {flow_data['flow_rate_m3_min']} m3/min")
 
         if powerButton:
+            if not previous_power_state:  # Wenn der vorherige Zustand "off" war
+                saved_state = load_state()
+                globals().update(saved_state)
             
             runtime_tracker.start()
             try:
@@ -364,12 +367,16 @@ def main():
                 
         else:
             print("Power Switch OFF.", powerButton)
+            if previous_power_state:  # Wenn der vorherige Zustand "on" war
+                state_to_save = {key: globals()[key] for key in all_attribute_keys if key not in telemetry_keys}
+                save_state(state_to_save)
             pumpRelaySw = False
             co2RelaisSw = False
             co2HeatingRelaySw = False
             autoSwitch = False
             runtime_tracker.stop()
             print(f"Gesamtlaufzeit: {runtime_tracker.get_total_runtime()} Stunden")
+        previous_power_state = powerButton
         time.sleep(2)
 
 
