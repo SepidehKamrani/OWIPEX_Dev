@@ -267,7 +267,8 @@ def main():
     #    flow_rate_handler = FlowRateHandler(Radar_Sensor)
     #    flow_data = flow_rate_handler.fetch_and_calculate()
     
-
+    ph_low_delay_start_time = None
+    ph_high_delay_start_time = None
     previous_power_state = False
 
     while not client.stopped:
