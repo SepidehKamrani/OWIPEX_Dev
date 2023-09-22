@@ -77,7 +77,7 @@ shared_attributes_keys = ['maximumTurbidity', 'turbiditySensorActive', 'turbidit
 
 machine_attributes_keys = ['autoSwitch', 'powerButton', 'co2RelaisSw', 'pumpRelaySw', 'co2HeatingRelaySw']
 
-ph_attributes_keys = ['ph_low_delay_start_time', 'ph_high_delay_duration', 'PHValueOffset', 'gemessener_high_wert', 'gemessener_low_wert', 'calibratePH', 'targetPHValue', 'targetPHtolerrance']
+ph_attributes_keys = ['ph_low_delay_start_time', 'ph_high_delay_duration', 'PHValueOffset', 'gemessener_high_wert', 'gemessener_low_wert', 'calibratePH', 'targetPHValue', 'targetPHtolerrance', 'minimumPHValue', 'maximumPHValue']
 
 turbidity_attributes_keys = ['maximumTurbidity', 'turbiditySensorActive', 'turbidityOffset', 'tempTruebSens']
 
