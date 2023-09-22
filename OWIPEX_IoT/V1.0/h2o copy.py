@@ -280,12 +280,12 @@ def main():
         turbidity_handler = TurbidityHandler(Trub_Sensor)
         gps_handler = GPSHandler()
 
-        maximumPHValue = targetPHValue + targetPHtolerrance
-        minimumPHValue = targetPHValue - targetPHtolerrance
+        maximumPHVal = targetPHValue + targetPHtolerrance
+        minimumPHVal = targetPHValue - targetPHtolerrance
         print("targetPHValue", targetPHValue)
         print("targetPHtolerrance", targetPHtolerrance)
-        print("minimumPHValue", minimumPHValue)
-        print("maximumPHValue", maximumPHValue)
+        print("minimumPHVal", minimumPHVal)
+        print("maximumPHVal", maximumPHVal)
 
         pumpRelaySwSig = pumpRelaySw
         co2RelaisSwSig = co2RelaisSw
@@ -326,9 +326,9 @@ def main():
             if autoSwitch:
                 print("automode ON", autoSwitch)
 
-                if measuredPHValue_telem > maximumPHValue:
+                if measuredPHValue_telem > maximumPHVal:
                     print("measuredPHValue_telem", measuredPHValue_telem)
-                    print("maximumPHValue", maximumPHValue)
+                    print("maximumPHVal", maximumPHVal)
                     co2RelaisSw = True
                     co2HeatingRelaySw = True
                     pumpRelaySw = False
@@ -341,8 +341,8 @@ def main():
                 else:
                     ph_high_delay_start_time = None
 
-                if measuredPHValue_telem < minimumPHValue:
-                    if measuredPHValue_telem < minimumPHValueStop:
+                if measuredPHValue_telem < minimumPHVal:
+                    if measuredPHValue_telem < minimumPHValStop:
                         autoSwitch = False
                         powerButton = False
                     if ph_low_delay_start_time is None:
@@ -355,7 +355,7 @@ def main():
                     ph_low_delay_start_time = None
 
                 # Wenn der pH-Wert innerhalb des erlaubten Fensters liegt:
-                if minimumPHValue <= measuredPHValue_telem <= maximumPHValue:
+                if minimumPHVal <= measuredPHValue_telem <= maximumPHVal:
                     pumpRelaySw = True
                     co2RelaisSw = False
                     co2HeatingRelaySw = False

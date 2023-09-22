@@ -19,9 +19,9 @@ pumpRelaySwSig = False
 co2HeatingRelaySwSig = False
 
 # PH Configuration
-minimumPHValue = 6.8
-minimumPHValueStop = 6.5
-maximumPHValue = 7.8
+minimumPHVal = 6.8
+minimumPHValStop = 6.5
+maximumPHVal = 7.8
 ph_low_delay_duration = 180  # in sek
 ph_high_delay_duration = 600  # in sek
 PHValueOffset = 0.0
@@ -77,7 +77,7 @@ shared_attributes_keys = ['maximumTurbidity', 'turbiditySensorActive', 'turbidit
 
 machine_attributes_keys = ['autoSwitch', 'powerButton', 'co2RelaisSw', 'pumpRelaySw', 'co2HeatingRelaySw']
 
-ph_attributes_keys = ['ph_low_delay_start_time', 'ph_high_delay_duration', 'PHValueOffset', 'gemessener_high_wert', 'gemessener_low_wert', 'calibratePH', 'targetPHValue', 'targetPHtolerrance', 'minimumPHValue', 'maximumPHValue']
+ph_attributes_keys = ['ph_low_delay_start_time', 'ph_high_delay_duration', 'PHValueOffset', 'gemessener_high_wert', 'gemessener_low_wert', 'calibratePH', 'targetPHValue', 'targetPHtolerrance', 'minimumPHVal', 'maximumPHVal']
 
 turbidity_attributes_keys = ['maximumTurbidity', 'turbiditySensorActive', 'turbidityOffset', 'tempTruebSens']
 
