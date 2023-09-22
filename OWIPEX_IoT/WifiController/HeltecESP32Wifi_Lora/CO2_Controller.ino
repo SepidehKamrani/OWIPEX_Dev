@@ -2,10 +2,13 @@
 #include <ThingsBoard.h>
 #include <DallasTemperature.h>
 
-constexpr char WIFI_SSID[] = "RUT240_AE4E";
-constexpr char WIFI_PASSWORD[] = "Jj34CkNd";
-constexpr char TOKEN[] = "1234567";
-constexpr char THINGSBOARD_SERVER[] = "192.168.1.235";
+constexpr char WIFI_SSID[] = "FamMorbius";
+constexpr char WIFI_PASSWORD[] = "45927194145938492747";
+constexpr char THINGSBOARD_SERVER[] = "161.35.199.150";
+//constexpr char WIFI_SSID[] = "RUT240_AE4E";
+//constexpr char WIFI_PASSWORD[] = "Jj34CkNd";
+//constexpr char THINGSBOARD_SERVER[] = "192.168.1.235";
+constexpr char TOKEN[] = "3JkbZ2krmuzTSFufljAs";
 constexpr uint16_t THINGSBOARD_PORT = 1883U;
 constexpr uint32_t MAX_MESSAGE_SIZE = 256U;
 
@@ -56,9 +59,9 @@ void InitWiFi() {
 void processSharedAttributes(const Shared_Attribute_Data &data) {
   for (auto it = data.begin(); it != data.end(); ++it) {
     if (strcmp(it->key().c_str(), CO2_RELAY_ATTR) == 0) {
-      digitalWrite(CO2_RELAY_PIN, it->value().as<bool>() ? HIGH : LOW);
+      digitalWrite(CO2_RELAY_PIN, it->value().as<bool>() ? LOW : HIGH);
     } else if(strcmp(it->key().c_str(), HEATING_RELAY_ATTR) == 0) {
-      digitalWrite(HEATING_RELAY_PIN, it->value().as<bool>() ? HIGH : LOW);
+      digitalWrite(HEATING_RELAY_PIN, it->value().as<bool>() ? LOW : HIGH);
     }
   }
 }
@@ -98,11 +101,7 @@ void loop() {
   // Sending telemetry every telemetrySendInterval time
   if (millis() - previousDataSend > telemetrySendInterval) {
     previousDataSend = millis();
-    tb.sendAttributeInt("rssi", WiFi.RSSI());
-    tb.sendAttributeInt("channel", WiFi.channel());
-    tb.sendAttributeString("bssid", WiFi.BSSIDstr().c_str());
-    tb.sendAttributeString("localIp", WiFi.localIP().toString().c_str());
-    tb.sendAttributeString("ssid", WiFi.SSID().c_str());
+    tb.sendTelemetryInt("temperature", random(10, 20));  // Replace with your temperature sensor reading
   }
 
   analogValue = analogRead(analogPin);

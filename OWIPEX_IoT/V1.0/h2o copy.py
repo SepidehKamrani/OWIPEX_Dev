@@ -241,7 +241,7 @@ co2HeatingRelaySw = False
 #countdownPHHigh = ph_high_delay_duration
 #countdownPHLow = ph_low_delay_duration
 
-previous_power_state = False
+
         
 def main():
     #def Global Variables for Main Funktion
@@ -268,7 +268,7 @@ def main():
     #    flow_data = flow_rate_handler.fetch_and_calculate()
     
 
-    
+    previous_power_state = False
 
     while not client.stopped:
         attributes, telemetry = get_data()
