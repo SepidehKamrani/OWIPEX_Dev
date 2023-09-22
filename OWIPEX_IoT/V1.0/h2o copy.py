@@ -29,7 +29,7 @@ client = None
 #Import Global vars
 from config import *
 
-all_attribute_keys = attributes_keys + shared_attributes_keys + machine_attributes_keys + ph_attributes_keys + turbidity_attributes_keys + radar_attributes_keys + alarm_attributes_keys + gps_attributes_keys
+all_attribute_keys = shared_attributes_keys + machine_attributes_keys + ph_attributes_keys + turbidity_attributes_keys + radar_attributes_keys + alarm_attributes_keys + gps_attributes_keys
 
 
 #Speichern des aktuellen Zustands:
