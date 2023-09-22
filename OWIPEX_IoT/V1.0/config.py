@@ -83,7 +83,7 @@ turbidity_attributes_keys = ['maximumTurbidity', 'turbiditySensorActive', 'turbi
 
 radar_attributes_keys = ['radarSensorActive']
 
-alarm_attributes_keys = ['alarmActiveMachine', 'alarmMessageMachine', 'resetAlarm']
+alarm_attributes_keys = []
 
 gps_attributes_keys = ['callGpsSwitch']
 
