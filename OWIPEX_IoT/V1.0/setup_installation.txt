@@ -86,21 +86,26 @@
 10. 
 
 
-Tablet Stecker
+Tablet Kabel 
+
+                                    Weipu Stecker 
 
 RS485
+
 Verdrillte Adern
-
-Braun           RS485+ (RS485A)
-Braun/Weiss     RS485- (RS485B)
-
+Braun           RS485+ (RS485A)     PIN 14
+Braun/Weiss     RS485- (RS485B)     PIN 15
 
 
 
+Sensorik
 
 PH Sonde
 Die Adresse der Sonde muss angepasst werden. Dafür verwenden wir das Skript "writeDeviceID_PHSonde.py"
 PH Sonde erhält die Adresse 0x03
+
+Anwendung in der Konsole: 
+sudo python3 writeDeviceID_PHSonde.py
 
 Weipu Stecker
 1 -> blau       DC -
