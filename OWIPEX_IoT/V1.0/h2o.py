@@ -257,12 +257,12 @@ def main():
         turbidity_handler = TurbidityHandler(Trub_Sensor)
         gps_handler = GPSHandler()
 
-        maximumPHValue = targetPHValue + targetPHtolerrance
+        maximumPHVal = targetPHValue + targetPHtolerrance
         minimumPHValue = targetPHValue - targetPHtolerrance
         print("targetPHValue", targetPHValue)
         print("targetPHtolerrance", targetPHtolerrance)
         print("minimumPHValue", minimumPHValue)
-        print("maximumPHValue", maximumPHValue)
+        print("maximumPHVal", maximumPHVal)
 
         pumpRelaySwSig = pumpRelaySw
         co2RelaisSwSig = co2RelaisSw
@@ -300,9 +300,9 @@ def main():
             if autoSwitch:
                 print("automode ON", autoSwitch)
 
-                if measuredPHValue_telem > maximumPHValue:
+                if measuredPHValue_telem > maximumPHVal:
                     print("measuredPHValue_telem", measuredPHValue_telem)
-                    print("maximumPHValue", maximumPHValue)
+                    print("maximumPHVal", maximumPHVal)
                     co2RelaisSw = True
                     co2HeatingRelaySw = True
                     pumpRelaySw = False
@@ -329,7 +329,7 @@ def main():
                     ph_low_delay_start_time = None
 
                 # Wenn der pH-Wert innerhalb des erlaubten Fensters liegt:
-                if minimumPHValue <= measuredPHValue_telem <= maximumPHValue:
+                if minimumPHValue <= measuredPHValue_telem <= maximumPHVal:
                     pumpRelaySw = True
                     co2RelaisSw = False
                     co2HeatingRelaySw = False
