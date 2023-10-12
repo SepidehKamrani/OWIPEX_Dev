@@ -14,32 +14,17 @@ WICHTIG!!!
 3. Installer und Ordner auf Tablet Kopieren
     Install Scripts auszuführen
         auto_installer.sh
-
-        Datei erst ausführbar machen
+    Datei erst ausführbar machen
             chmod +x auto_installer.sh
-        Datei auszuführen
+    Datei auszuführen
             ./auto_installer.sh
 
+    Chromium Service installer 
+        chromium_starter.sh
+        siehe oben
 
-3. User Anlegen
-    5.1 User owipex_usr hinzufügen
-        adduser owipex_usr
-    5.2 User in Sudoer List hinzufügen
-        usermod -aG sudo owipex_usr
-    
-6. sudo installieren
-    6.1 apt install sudo
 
-7. ONBOARD Tastatur installieren
-    apt install onboard
-
-8. XHOST Freigabe für benutzer
-    8.1 Bevor du den xhost Befehl ausführst, musst du die DISPLAY Umgebungsvariable für den root Benutzer setzen. Du kannst dies tun, indem du den folgenden Befehl ausführst:   
-        export DISPLAY=:0
-    8.2 Danach solltest du in der Lage sein, den xhost Befehl erfolgreich auszuführen:
-            xhost +SI:localuser:owipex_usr
-
-9. Anpassen Ansicht
+4. Anpassen Ansicht
     Schriftgröße auf 12 stellen
     Icongröße auf 50 stellen
     9.3 Scrollslider vergrößern öffnen Konfiguration
@@ -58,11 +43,8 @@ WICHTIG!!!
             -GtkScrollbar-has-backward-stepper: true;
             -GtkScrollbar-has-forward-stepper: true;
         }
-
-
-10. Appereance 
-    Xfce-flat
-
+    9.5 Appereance 
+            Xfce-flat
 
 Tablet Kabel 
 
