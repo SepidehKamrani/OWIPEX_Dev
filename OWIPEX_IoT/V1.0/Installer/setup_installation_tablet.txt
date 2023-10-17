@@ -23,6 +23,10 @@ WICHTIG!!!
         chromium_starter.sh
         siehe oben
 
+    SPS App Installer 
+        app_service_installer.sh
+        siehe oben
+
 
 4. Anpassen Ansicht
     Schriftgröße auf 12 stellen
@@ -45,6 +49,28 @@ WICHTIG!!!
         }
     9.5 Appereance 
             Xfce-flat
+
+
+5. onboard
+    onboard in den autostart hinzufügen
+        Öffnen Sie das XFCE-Einstellungsmenü.
+        Wählen Sie "Sitzung und Startverhalten" oder "Session and Startup" (abhängig von Ihrer Spracheinstellung).
+        Wechseln Sie zum Tab "Autostart" oder "Application Autostart".
+        Klicken Sie auf "Hinzufügen" oder "Add".
+        Geben Sie im Dialogfeld die folgenden Informationen ein:
+        
+        Name: Onboard
+        Beschreibung: Virtuelle Tastatur
+        Ordner: /usr/bin/onboard
+        Klicken Sie auf "OK".
+        Schließen Sie das Einstellungsfenster.
+
+    ONBOARD Einstellungsfenster
+        Allgemein:  Beim bearbeten automatisch anzeigen
+                    Schwebendes Symbol
+        Thema: Droid
+        Fenster: Fensteroptionen: Durchsichtigkeit: Fenster20, Hintergrund50 
+                Wenn aktiv: Durchsichtigkeit einstellenauf 50 nach 1s
 
 Tablet Kabel 
 
