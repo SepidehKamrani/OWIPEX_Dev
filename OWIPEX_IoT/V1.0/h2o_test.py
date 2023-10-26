@@ -283,6 +283,7 @@ def main():
                 print(f"Flow Rate (Cubic Meters per Minute): {flow_data['flow_rate_m3_min']} m3/min")
         
         if calibratePH:
+            print("calibration", calibratePH)
             ph_handler.calibrate(high_ph_value=10, low_ph_value=7, measured_high=gemessener_high_wert, measured_low=gemessener_low_wert)
             calibratePH = False
 
