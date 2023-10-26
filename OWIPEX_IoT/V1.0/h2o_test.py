@@ -9,8 +9,8 @@ from modbus_lib import DeviceManager
 from time import sleep
 from FlowCalculation import FlowCalculation
 
-ACCESS_TOKEN = "buyj4qVjjCWd1Zvp4onK"  # Replace this with your actual access token
-THINGSBOARD_SERVER = 'localhost'  # Replace with your Thingsboard server address
+ACCESS_TOKEN = "2dI3J7yks0O5lP9CzB9n"  # Replace this with your actual access token
+THINGSBOARD_SERVER = '192.168.100.160'  # Replace with your Thingsboard server address
 THINGSBOARD_PORT = 1883
 
 #RS485 Comunication and Devices
