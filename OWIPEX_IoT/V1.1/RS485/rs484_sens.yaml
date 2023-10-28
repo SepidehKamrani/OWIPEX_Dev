@@ -1,0 +1,11 @@
+sensors:
+  - sensor_id: 1
+    sensor_type: "PH Sensor"
+    sensor_address: 10
+    register_addresses: [0, 1, 2]
+    read_interval: 60
+  - sensor_id: 2
+    sensor_type: "Temperatur Sensor"
+    sensor_address: 11
+    register_addresses: [0, 1]
+    read_interval: 120

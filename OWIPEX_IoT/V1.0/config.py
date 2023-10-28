@@ -72,8 +72,10 @@ attributes_keys = ['ip_address', 'macaddress']
 
 
 # Lists for different groups of attributes
-shared_attributes_keys = ['maximumTurbidity', 'turbiditySensorActive', 'turbidityOffset', 'radarSensorActive',  
-                          'co2RelaisSwSig']
+shared_attributes_keys = ['minimumPHValue', 'minimumPHValueStop', 'ph_low_delay_start_time', 'ph_high_delay_duration', 
+                          'maximumPHValue', 'PHValueOffset', 'maximumTurbidity', 'turbiditySensorActive', 
+                          'turbidityOffset', 'radarSensorActive', 'alarmActiveMachine', 'alarmMessageMachine', 
+                          'resetAlarm', 'autoSwitch', 'callGpsSwitch', 'powerButton', 'co2RelaisSwSig', 'calibratePH']
 
 machine_attributes_keys = ['autoSwitch', 'powerButton', 'co2RelaisSw', 'pumpRelaySw', 'co2HeatingRelaySw']
 
