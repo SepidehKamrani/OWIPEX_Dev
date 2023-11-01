@@ -65,7 +65,8 @@ gpsHeight = 1.0
 telemetry_keys = ['calculatedFlowRate', 'waterLevelHeight_telem', 'measuredTurbidity_telem', 'co2RelaisSwSig', 
                   'co2HeatingRelaySwSig', 'pumpRelaySwSig', 'measuredPHValue_telem', 'temperaturPHSens_telem', 
                   'gpsTimestamp', 'gpsLatitude', 'gpsLongitude', 'gpsHeight', 'messuredRadar_Air_telem', 
-                  'flow_rate_l_min', 'flow_rate_l_h', 'flow_rate_m3_min']
+                  'flow_rate_l_min', 'flow_rate_l_h', 'flow_rate_m3_min', 'minimumPHValue', 'maximumPHValue', 
+                  'minimumPHValueStop']
 
 attributes_keys = ['ip_address', 'macaddress']
 
