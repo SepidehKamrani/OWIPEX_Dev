@@ -78,7 +78,6 @@ attributes_keys = ['ip_address', 'macaddress']
 # Lists for different groups of attributes
 shared_attributes_keys = ['minimumPHValueStop', 'ph_low_delay_start_time', 'ph_high_delay_duration', 
                           'maximumPHVal', 'PHValueOffset', 'maximumTurbidity', 'turbiditySensorActive', 
-                          'turbidityOffset', 'radarSensorActive', 'alarmActiveMachine', 'alarmMessageMachine', 
-                          'resetAlarm', 'autoSwitch', 'callGpsSwitch', 'powerButton', 'co2RelaisSwSig',
+                          'turbidityOffset', 'radarSensorActive', 'autoSwitch', 'callGpsSwitch', 'powerButton', 'co2RelaisSwSig',
                           'calibratePH', 'targetPHValue', 'targetPHtolerrance', 'gemessener_high_wert',
                           'gemessener_low_wert']
