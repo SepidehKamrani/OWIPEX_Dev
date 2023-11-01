@@ -256,7 +256,7 @@ def main():
     # Request shared attributes
     client.request_attributes(shared_keys=shared_attributes_keys, callback=attribute_callback)
     # Subscribe to individual attributes using the defined lists
-    for attribute in machine_attributes_keys + ph_attributes_keys + turbidity_attributes_keys + radar_attributes_keys + alarm_attributes_keys + gps_attributes_keys:
+    for attribute in shared_attributes_keys:
         client.subscribe_to_attribute(attribute, attribute_callback)
 
     # Now rpc_callback will process rpc requests from the server
