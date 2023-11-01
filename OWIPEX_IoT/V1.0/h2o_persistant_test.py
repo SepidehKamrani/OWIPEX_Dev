@@ -176,7 +176,7 @@ class PHHandler:
         
         temperaturPHSens_telem = self.sensor.read_register(start_address=0x0003, register_count=2)
         
-        print(f'PH: {measuredPHValue_telem}, Temperature PH Sens: {temperaturPHSens_telem}')
+        print(f'PH: {measuredPHValue_telem}, Temperature PH Sens: {temperaturPHSens_telem}, RAW_PH: {raw_ph_value}')
         return measuredPHValue_telem, temperaturPHSens_telem
 
     def correct_ph_value(self, raw_value):
