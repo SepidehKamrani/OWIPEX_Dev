@@ -17,7 +17,7 @@ co2HeatingRelaySw = False
 co2RelaisSwSig = False
 pumpRelaySwSig = False
 co2HeatingRelaySwSig = False
-previous_power_state = False
+
 
 # PH Configuration
 minimumPHVal = 6.8
@@ -81,4 +81,4 @@ shared_attributes_keys = ['minimumPHValueStop', 'ph_low_delay_start_time', 'ph_h
                           'turbidityOffset', 'radarSensorActive', 'alarmActiveMachine', 'alarmMessageMachine', 
                           'resetAlarm', 'autoSwitch', 'callGpsSwitch', 'powerButton', 'co2RelaisSwSig',
                           'calibratePH', 'targetPHValue', 'targetPHtolerrance', 'gemessener_high_wert',
-                          'gemessener_low_wert', 'previous_power_state']
+                          'gemessener_low_wert']
