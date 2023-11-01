@@ -17,6 +17,7 @@ co2HeatingRelaySw = False
 co2RelaisSwSig = False
 pumpRelaySwSig = False
 co2HeatingRelaySwSig = False
+previous_power_state = False
 
 # PH Configuration
 minimumPHVal = 6.8
@@ -24,6 +25,8 @@ minimumPHValStop = 6.5
 maximumPHVal = 7.8
 ph_low_delay_duration = 180  # in sek
 ph_high_delay_duration = 600  # in sek
+ph_low_delay_start_time = None
+ph_high_delay_start_time = None
 PHValueOffset = 0.0
 temperaturPHSens_telem = 0.0
 measuredPHValue_telem = 0.0
