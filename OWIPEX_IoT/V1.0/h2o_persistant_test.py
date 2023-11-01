@@ -240,11 +240,15 @@ co2HeatingRelaySw = False
 #countdownPHHigh = ph_high_delay_duration
 #countdownPHLow = ph_low_delay_duration
 
+runtime_tracker = RuntimeTracker()
+ph_handler = PHHandler(PH_Sensor)
+turbidity_handler = TurbidityHandler(Trub_Sensor)
+gps_handler = GPSHandler()
 
         
 def main():
     #def Global Variables for Main Funktion
-    global client, countdownPHLow, powerButton, tempTruebSens, countdownPHHigh, targetPHtolerrance, targetPHValue, calibratePH, gemessener_low_wert, gemessener_high_wert, autoSwitch, temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, gpsTimestamp, gpsLatitude, gpsLongitude, gpsHeight, waterLevelHeight_telem, calculatedFlowRate, messuredRadar_Air_telem, flow_rate_l_min, flow_rate_l_h, flow_rate_m3_min, co2RelaisSwSig, co2HeatingRelaySwSig, pumpRelaySwSig, co2RelaisSw, co2HeatingRelaySw, pumpRelaySw
+    global ph_handler, turbidity_handler, gps_handler, runtime_tracker, client, countdownPHLow, powerButton, tempTruebSens, countdownPHHigh, targetPHtolerrance, targetPHValue, calibratePH, gemessener_low_wert, gemessener_high_wert, autoSwitch, temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, gpsTimestamp, gpsLatitude, gpsLongitude, gpsHeight, waterLevelHeight_telem, calculatedFlowRate, messuredRadar_Air_telem, flow_rate_l_min, flow_rate_l_h, flow_rate_m3_min, co2RelaisSwSig, co2HeatingRelaySwSig, pumpRelaySwSig, co2RelaisSw, co2HeatingRelaySw, pumpRelaySw
 
     saved_state = load_state()
     globals().update(saved_state)
@@ -272,10 +276,7 @@ def main():
         attributes, telemetry = get_data()
         #PH Initial
 
-        runtime_tracker = RuntimeTracker()
-        ph_handler = PHHandler(PH_Sensor)
-        turbidity_handler = TurbidityHandler(Trub_Sensor)
-        gps_handler = GPSHandler()
+        
 
         maximumPHVal = targetPHValue + targetPHtolerrance
         minimumPHVal = targetPHValue - targetPHtolerrance
