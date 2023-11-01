@@ -81,4 +81,4 @@ shared_attributes_keys = ['minimumPHValueStop', 'ph_low_delay_start_time', 'ph_h
                           'turbidityOffset', 'radarSensorActive', 'alarmActiveMachine', 'alarmMessageMachine', 
                           'resetAlarm', 'autoSwitch', 'callGpsSwitch', 'powerButton', 'co2RelaisSwSig',
                           'calibratePH', 'targetPHValue', 'targetPHtolerrance', 'gemessener_high_wert',
-                          'gemessener_low_wert', ]
+                          'gemessener_low_wert', 'previous_power_state']
