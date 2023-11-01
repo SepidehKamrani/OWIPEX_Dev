@@ -63,23 +63,25 @@ gpsHeight = 1.0
 
 
 # Telemetry and Attribute Variables
-telemetry_keys = ['powerButton', 'autoSwitch', 'co2RelaisSw', 'co2HeatingRelaySw', 'pumpRelaySw', 'calculatedFlowRate', 'waterLevelHeight_telem', 'measuredTurbidity_telem', 'co2RelaisSwSig', 
-                  'co2HeatingRelaySwSig', 'pumpRelaySwSig', 'measuredPHValue_telem', 'temperaturPHSens_telem', 'gpsTimestamp', 'messuredRadar_Air_telem', 
-                  'countdownPHHigh', 'countdownPHLow', 'flow_rate_l_min', 'flow_rate_l_h', 'flow_rate_m3_min', 'gpsLatitude', 'gpsLongitude', 'gpsHeight', 'ph_low_delay_start_time', 'ph_high_delay_duration']
+telemetry_keys = ['powerButton', 'autoSwitch', 'co2RelaisSw', 'co2HeatingRelaySw', 'pumpRelaySw', 'calculatedFlowRate', 'waterLevelHeight_telem', 'measuredTurbidity_telem',
+                  'co2RelaisSwSig', 'co2HeatingRelaySwSig', 'pumpRelaySwSig', 'measuredPHValue_telem', 'temperaturPHSens_telem', 'gpsTimestamp', 'messuredRadar_Air_telem', 
+                  'countdownPHHigh', 'countdownPHLow', 'flow_rate_l_min', 'flow_rate_l_h', 'flow_rate_m3_min', 'gpsLatitude', 'gpsLongitude', 'gpsHeight', 'ph_low_delay_start_time', 
+                  'ph_high_delay_duration', 'minimumPHVal', 'maximumPHVal']
 
 attributes_keys = ['ip_address', 'macaddress']
 
 
 
 # Lists for different groups of attributes
-shared_attributes_keys = ['minimumPHValue', 'minimumPHValueStop', 'ph_low_delay_start_time', 'ph_high_delay_duration', 
-                          'maximumPHValue', 'PHValueOffset', 'maximumTurbidity', 'turbiditySensorActive', 
+shared_attributes_keys = ['minimumPHValueStop', 'ph_low_delay_start_time', 'ph_high_delay_duration', 
+                          'maximumPHVal', 'PHValueOffset', 'maximumTurbidity', 'turbiditySensorActive', 
                           'turbidityOffset', 'radarSensorActive', 'alarmActiveMachine', 'alarmMessageMachine', 
-                          'resetAlarm', 'autoSwitch', 'callGpsSwitch', 'powerButton', 'co2RelaisSwSig', 'calibratePH']
+                          'resetAlarm', 'autoSwitch', 'callGpsSwitch', 'powerButton', 'co2RelaisSwSig',
+                          'calibratePH', 'targetPHValue', 'targetPHtolerrance']
 
 machine_attributes_keys = ['autoSwitch', 'powerButton', 'co2RelaisSw', 'pumpRelaySw', 'co2HeatingRelaySw']
 
-ph_attributes_keys = ['ph_low_delay_start_time', 'ph_high_delay_duration', 'PHValueOffset', 'gemessener_high_wert', 'gemessener_low_wert', 'calibratePH', 'targetPHValue', 'targetPHtolerrance', 'minimumPHVal', 'maximumPHVal']
+ph_attributes_keys = ['ph_low_delay_start_time', 'ph_high_delay_duration', 'gemessener_high_wert', 'gemessener_low_wert', 'calibratePH', 'targetPHValue', 'targetPHtolerrance', 'minimumPHVal', 'maximumPHVal']
 
 turbidity_attributes_keys = ['maximumTurbidity', 'turbiditySensorActive', 'turbidityOffset', 'tempTruebSens']
 
