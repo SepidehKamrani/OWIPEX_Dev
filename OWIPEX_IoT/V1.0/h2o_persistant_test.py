@@ -304,15 +304,12 @@ def main():
                 print(f"Flow Rate (Liters per Hour): {flow_data['flow_rate_l_h']} L/h")
                 print(f"Flow Rate (Cubic Meters per Minute): {flow_data['flow_rate_m3_min']} m3/min")
 
-        try:       
-                if calibratePH:
+        if calibratePH:
                     ph_handler.calibrate(high_ph_value=10, low_ph_value=7, measured_high=gemessener_high_wert, measured_low=gemessener_low_wert)
                     calibratePH = False
-                else:
-                    measuredPHValue_telem, temperaturPHSens_telem = ph_handler.fetch_and_display_data()  
-                    measuredTurbidity_telem, tempTruebSens = turbidity_handler.fetch_and_display_data(turbiditySensorActive)
-        except Exception as e:
-            print(f"An error occurred: {e}")
+        else:
+            measuredPHValue_telem, temperaturPHSens_telem = ph_handler.fetch_and_display_data()  
+            measuredTurbidity_telem, tempTruebSens = turbidity_handler.fetch_and_display_data(turbiditySensorActive)
 
         if powerButton:
             if not previous_power_state:  # Wenn der vorherige Zustand "off" war
