@@ -82,4 +82,4 @@ shared_attributes_keys = ['minimumPHValueStop', 'ph_low_delay_start_time', 'ph_h
                           'maximumPHVal', 'PHValueOffset', 'maximumTurbidity', 'turbiditySensorActive', 
                           'turbidityOffset', 'radarSensorActive', 'autoSwitch', 'callGpsSwitch', 'powerButton', 'co2RelaisSwSig',
                           'calibratePH', 'targetPHValue', 'targetPHtolerrance', 'gemessener_high_wert',
-                          'gemessener_low_wert', 'ph_slope', 'ph_intercept']
+                          'gemessener_low_wert', 'ph_slope', 'ph_intercept', 'maximumPHVal', 'minimumPHVal']
