@@ -265,7 +265,7 @@ ph_handler.load_calibration()
         
 def main():
     #def Global Variables for Main Funktion
-    global runtime_tracker, minimumPHValueStop, maximumPHVal, minimumPHVal, ph_handler, turbidity_handler, gps_handler, runtime_tracker, client, countdownPHLow, powerButton, tempTruebSens, countdownPHHigh, targetPHtolerrance, targetPHValue, calibratePH, gemessener_low_wert, gemessener_high_wert, autoSwitch, temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, gpsTimestamp, gpsLatitude, gpsLongitude, gpsHeight, waterLevelHeight_telem, calculatedFlowRate, messuredRadar_Air_telem, flow_rate_l_min, flow_rate_l_h, flow_rate_m3_min, co2RelaisSwSig, co2HeatingRelaySwSig, pumpRelaySwSig, co2RelaisSw, co2HeatingRelaySw, pumpRelaySw
+    global runtime_tracker_var, minimumPHValueStop, maximumPHVal, minimumPHVal, ph_handler, turbidity_handler, gps_handler, runtime_tracker, client, countdownPHLow, powerButton, tempTruebSens, countdownPHHigh, targetPHtolerrance, targetPHValue, calibratePH, gemessener_low_wert, gemessener_high_wert, autoSwitch, temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, gpsTimestamp, gpsLatitude, gpsLongitude, gpsHeight, waterLevelHeight_telem, calculatedFlowRate, messuredRadar_Air_telem, flow_rate_l_min, flow_rate_l_h, flow_rate_m3_min, co2RelaisSwSig, co2HeatingRelaySwSig, pumpRelaySwSig, co2RelaisSw, co2HeatingRelaySw, pumpRelaySw
 
     saved_state = load_state()
     globals().update(saved_state)
@@ -294,7 +294,7 @@ def main():
         #PH Initial
 
         
-
+        runtime_tracker_var = runtime_tracker.get_total_runtime()   
         maximumPHVal = targetPHValue + targetPHtolerrance
         minimumPHVal = targetPHValue - targetPHtolerrance
         print("targetPHValue", targetPHValue)
@@ -344,7 +344,7 @@ def main():
             
             runtime_tracker.start()
 
-            
+        
             
            
 # Main Logic
@@ -406,7 +406,7 @@ def main():
             co2RelaisSw = False
             co2HeatingRelaySw = False
             autoSwitch = False
-            runtime_tracker.stop()
+            runtime_tracker.stop() 
             print(f"Gesamtlaufzeit: {runtime_tracker.get_total_runtime()} Stunden")
         previous_power_state = powerButton
         time.sleep(2)
