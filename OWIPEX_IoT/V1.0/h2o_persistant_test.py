@@ -195,6 +195,21 @@ class PHHandler:
         self.slope = (high_ph_value - low_ph_value) / (measured_high - measured_low)
         self.intercept = high_ph_value - self.slope * measured_high
 
+    def save_calibration(self):
+        global ph_slope, ph_intercept
+        ph_slope = self.slope
+        ph_intercept = self.intercept
+        state_to_save = {key: globals()[key] for key in shared_attributes_keys if key in globals()}
+        save_state(state_to_save)
+        print("Kalibrierungswerte gespeichert.")
+
+    def load_calibration(self):
+        global ph_slope, ph_intercept
+        saved_state = load_state()
+        self.slope = saved_state.get('ph_slope', 1)  # Standardwert ist 1
+        self.intercept = saved_state.get('ph_intercept', 0)  # Standardwert ist 0
+        print("Kalibrierungswerte geladen.")
+
 class FlowRateHandler:
     def __init__(self, radar_sensor):
         self.radar_sensor = radar_sensor
@@ -244,6 +259,7 @@ runtime_tracker = RuntimeTracker()
 ph_handler = PHHandler(PH_Sensor)
 turbidity_handler = TurbidityHandler(Trub_Sensor)
 gps_handler = GPSHandler()
+ph_handler.load_calibration()
 
         
 def main():
@@ -311,6 +327,7 @@ def main():
 
         if calibratePH:
             ph_handler.calibrate(high_ph_value=10, low_ph_value=7, measured_high=gemessener_high_wert, measured_low=gemessener_low_wert)
+            ph_handler.save_calibration()
             calibratePH = False
             print("Nach der Kalibrierung:")
             print("Steigung (slope):", ph_handler.slope)

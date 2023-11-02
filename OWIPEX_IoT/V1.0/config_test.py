@@ -37,6 +37,8 @@ targetPHValue = 7.50
 targetPHtolerrance = 0.40
 countdownPHHigh = None
 countdownPHLow = None
+ph_slope = 1.0
+ph_intercept = 0.0
 
 # Turbidity Configuration
 measuredTurbidity = 0
@@ -80,4 +82,4 @@ shared_attributes_keys = ['minimumPHValueStop', 'ph_low_delay_start_time', 'ph_h
                           'maximumPHVal', 'PHValueOffset', 'maximumTurbidity', 'turbiditySensorActive', 
                           'turbidityOffset', 'radarSensorActive', 'autoSwitch', 'callGpsSwitch', 'powerButton', 'co2RelaisSwSig',
                           'calibratePH', 'targetPHValue', 'targetPHtolerrance', 'gemessener_high_wert',
-                          'gemessener_low_wert']
+                          'gemessener_low_wert', 'ph_slope', 'ph_intercept']
