@@ -10,7 +10,7 @@ from time import sleep
 from FlowCalculation import FlowCalculation
 
 ACCESS_TOKEN = "buyj4qVjjCWd1Zvp4onK"  # Replace this with your actual access token
-THINGSBOARD_SERVER = '192.168.100.26'  # Replace with your Thingsboard server address
+THINGSBOARD_SERVER = 'localhost'  # Replace with your Thingsboard server address
 THINGSBOARD_PORT = 1883
 
 #RS485 Comunication and Devices
@@ -28,27 +28,11 @@ client = None
 
 #Import Global vars
 from config import *
-shared_attributes_keys
-
-
-#Speichern des aktuellen Zustands:
-def save_state(state_dict):
-    with open('state.json', 'w') as file:
-        json.dump(state_dict, file)
-
-#Laden des gespeicherten Zustands:
-def load_state():
-    if os.path.exists('state.json'):
-        with open('state.json', 'r') as file:
-            return json.load(file)
-    return {}
 
  #that will be called when the value of our Shared Attribute changes
 def attribute_callback(result, _):
     globals().update({key: result[key] for key in result if key in globals()})
-    state_to_save = {key: globals()[key] for key in shared_attributes_keys if key in globals()}
-    save_state(state_to_save)
-    print(result)
+    #print(result)
 
 # Callback function that will be called when an RPC request is received
 def rpc_callback(id, request_body):
@@ -176,7 +160,7 @@ class PHHandler:
         
         temperaturPHSens_telem = self.sensor.read_register(start_address=0x0003, register_count=2)
         
-        print(f'PH: {measuredPHValue_telem}, Temperature PH Sens: {temperaturPHSens_telem}, RAW_PH: {raw_ph_value}')
+        print(f'PH: {measuredPHValue_telem}, Temperature PH Sens: {temperaturPHSens_telem}')
         return measuredPHValue_telem, temperaturPHSens_telem
 
     def correct_ph_value(self, raw_value):
@@ -194,21 +178,6 @@ class PHHandler:
         # Berechnung der Steigung und des y-Achsenabschnitts
         self.slope = (high_ph_value - low_ph_value) / (measured_high - measured_low)
         self.intercept = high_ph_value - self.slope * measured_high
-
-    def save_calibration(self):
-        global ph_slope, ph_intercept
-        ph_slope = self.slope
-        ph_intercept = self.intercept
-        state_to_save = {key: globals()[key] for key in shared_attributes_keys if key in globals()}
-        save_state(state_to_save)
-        print("Kalibrierungswerte gespeichert.")
-
-    def load_calibration(self):
-        global ph_slope, ph_intercept
-        saved_state = load_state()
-        self.slope = saved_state.get('ph_slope', 1)  # Standardwert ist 1
-        self.intercept = saved_state.get('ph_intercept', 0)  # Standardwert ist 0
-        print("Kalibrierungswerte geladen.")
 
 class FlowRateHandler:
     def __init__(self, radar_sensor):
@@ -252,23 +221,12 @@ class FlowRateHandler:
 pumpRelaySw = False
 co2RelaisSw = False
 co2HeatingRelaySw = False
-minimumPHValueStop = 5
 #countdownPHHigh = ph_high_delay_duration
 #countdownPHLow = ph_low_delay_duration
-
-runtime_tracker = RuntimeTracker()
-ph_handler = PHHandler(PH_Sensor)
-turbidity_handler = TurbidityHandler(Trub_Sensor)
-gps_handler = GPSHandler()
-ph_handler.load_calibration()
-
         
 def main():
     #def Global Variables for Main Funktion
-    global minimumPHValueStop, maximumPHVal, minimumPHVal, ph_handler, turbidity_handler, gps_handler, runtime_tracker, client, countdownPHLow, powerButton, tempTruebSens, countdownPHHigh, targetPHtolerrance, targetPHValue, calibratePH, gemessener_low_wert, gemessener_high_wert, autoSwitch, temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, gpsTimestamp, gpsLatitude, gpsLongitude, gpsHeight, waterLevelHeight_telem, calculatedFlowRate, messuredRadar_Air_telem, flow_rate_l_min, flow_rate_l_h, flow_rate_m3_min, co2RelaisSwSig, co2HeatingRelaySwSig, pumpRelaySwSig, co2RelaisSw, co2HeatingRelaySw, pumpRelaySw
-
-    saved_state = load_state()
-    globals().update(saved_state)
+    global client, countdownPHLow, powerButton, tempTruebSens, countdownPHHigh, targetPHtolerrance, targetPHValue, calibratePH, gemessener_low_wert, gemessener_high_wert, autoSwitch, temperaturPHSens_telem, measuredPHValue_telem, measuredTurbidity_telem, gpsTimestamp, gpsLatitude, gpsLongitude, gpsHeight, waterLevelHeight_telem, calculatedFlowRate, messuredRadar_Air_telem, flow_rate_l_min, flow_rate_l_h, flow_rate_m3_min, co2RelaisSwSig, co2HeatingRelaySwSig, pumpRelaySwSig, co2RelaisSw, co2HeatingRelaySw, pumpRelaySw
 
     client = TBDeviceMqttClient(THINGSBOARD_SERVER, THINGSBOARD_PORT, ACCESS_TOKEN)
     client.connect()
@@ -277,32 +235,34 @@ def main():
     # Request shared attributes
     client.request_attributes(shared_keys=shared_attributes_keys, callback=attribute_callback)
     # Subscribe to individual attributes using the defined lists
-    for attribute in shared_attributes_keys:
+    for attribute in machine_attributes_keys + ph_attributes_keys + turbidity_attributes_keys + radar_attributes_keys + alarm_attributes_keys + gps_attributes_keys:
         client.subscribe_to_attribute(attribute, attribute_callback)
 
     # Now rpc_callback will process rpc requests from the server
     client.set_server_side_rpc_request_handler(rpc_callback)
 
-    #if (radarSensorActive):
-    #    flow_rate_handler = FlowRateHandler(Radar_Sensor)
-    #    flow_data = flow_rate_handler.fetch_and_calculate()
+    if (radarSensorActive):
+        flow_rate_handler = FlowRateHandler(Radar_Sensor)
+        flow_data = flow_rate_handler.fetch_and_calculate()
+    
 
-    previous_power_state = False
+    
 
     while not client.stopped:
         attributes, telemetry = get_data()
         #PH Initial
 
-        
+        runtime_tracker = RuntimeTracker()
+        ph_handler = PHHandler(PH_Sensor)
+        turbidity_handler = TurbidityHandler(Trub_Sensor)
+        gps_handler = GPSHandler()
 
         maximumPHVal = targetPHValue + targetPHtolerrance
-        minimumPHVal = targetPHValue - targetPHtolerrance
+        minimumPHValue = targetPHValue - targetPHtolerrance
         print("targetPHValue", targetPHValue)
         print("targetPHtolerrance", targetPHtolerrance)
-        print("minimumPHVal", minimumPHVal)
+        print("minimumPHValue", minimumPHValue)
         print("maximumPHVal", maximumPHVal)
-        print("gemessener_high_wert", gemessener_high_wert)
-        print("gemessener_low_wert", gemessener_low_wert)
 
         pumpRelaySwSig = pumpRelaySw
         co2RelaisSwSig = co2RelaisSw
@@ -322,37 +282,23 @@ def main():
                 print(f"Flow Rate (Liters per Hour): {flow_data['flow_rate_l_h']} L/h")
                 print(f"Flow Rate (Cubic Meters per Minute): {flow_data['flow_rate_m3_min']} m3/min")
 
-        print("Vor der Kalibrierung:")
-        print("Steigung (slope):", ph_handler.slope)
-        print("y-Achsenabschnitt (intercept):", ph_handler.intercept)
-
-        if calibratePH:
-            ph_handler.calibrate(high_ph_value=10, low_ph_value=7, measured_high=gemessener_high_wert, measured_low=gemessener_low_wert)
-            ph_handler.save_calibration()
-            calibratePH = False
-            print("Nach der Kalibrierung:")
-            print("Steigung (slope):", ph_handler.slope)
-            print("y-Achsenabschnitt (intercept):", ph_handler.intercept)
-        else:
-            measuredPHValue_telem, temperaturPHSens_telem = ph_handler.fetch_and_display_data()  
-            measuredTurbidity_telem, tempTruebSens = turbidity_handler.fetch_and_display_data(turbiditySensorActive)
-
         if powerButton:
-            if not previous_power_state:  # Wenn der vorherige Zustand "off" war
-                saved_state = load_state()
-                globals().update(saved_state)
             
             runtime_tracker.start()
-
-            
-            
+            try:
+                
+                if calibratePH:
+                    ph_handler.calibrate(high_ph_value=10, low_ph_value=7, measured_high=gemessener_high_wert, measured_low=gemessener_low_wert)
+                    calibratePH = False
+                else:
+                    measuredPHValue_telem, temperaturPHSens_telem = ph_handler.fetch_and_display_data()  
+                    measuredTurbidity_telem, tempTruebSens = turbidity_handler.fetch_and_display_data(turbiditySensorActive)
+            except Exception as e:
+                print(f"An error occurred: {e}")
            
 # Main Logic
             if autoSwitch:
                 print("automode ON", autoSwitch)
-
-                if minimumPHValueStop < measuredPHValue_telem:
-                    powerButton = False
 
                 if measuredPHValue_telem > maximumPHVal:
                     print("measuredPHValue_telem", measuredPHValue_telem)
@@ -369,8 +315,8 @@ def main():
                 else:
                     ph_high_delay_start_time = None
 
-                if measuredPHValue_telem < minimumPHVal:
-                    if measuredPHValue_telem < minimumPHValStop:
+                if measuredPHValue_telem < minimumPHValue:
+                    if measuredPHValue_telem < minimumPHValueStop:
                         autoSwitch = False
                         powerButton = False
                     if ph_low_delay_start_time is None:
@@ -383,15 +329,12 @@ def main():
                     ph_low_delay_start_time = None
 
                 # Wenn der pH-Wert innerhalb des erlaubten Fensters liegt:
-                if minimumPHVal <= measuredPHValue_telem <= maximumPHVal:
+                if minimumPHValue <= measuredPHValue_telem <= maximumPHVal:
                     pumpRelaySw = True
                     co2RelaisSw = False
                     co2HeatingRelaySw = False
             else:
                 print("automode OFF", autoSwitch)
-                pumpRelaySw = False
-                co2RelaisSw = False
-                co2HeatingRelaySw = False
                 ph_low_delay_start_time = None
                 ph_high_delay_start_time = None
                 countdownPHHigh = ph_high_delay_duration
@@ -399,16 +342,12 @@ def main():
                 
         else:
             print("Power Switch OFF.", powerButton)
-            if previous_power_state:  # Wenn der vorherige Zustand "on" war
-                state_to_save = {key: globals()[key] for key in shared_attributes_keys}
-                save_state(state_to_save)
             pumpRelaySw = False
             co2RelaisSw = False
             co2HeatingRelaySw = False
             autoSwitch = False
             runtime_tracker.stop()
             print(f"Gesamtlaufzeit: {runtime_tracker.get_total_runtime()} Stunden")
-        previous_power_state = powerButton
         time.sleep(2)
 
 
