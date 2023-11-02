@@ -17,7 +17,7 @@ co2HeatingRelaySw = False
 co2RelaisSwSig = False
 pumpRelaySwSig = False
 co2HeatingRelaySwSig = False
-
+runtime_tracker = None
 
 # PH Configuration
 minimumPHVal = 6.8
@@ -68,7 +68,7 @@ gpsHeight = 1.0
 
 
 # Telemetry and Attribute Variables
-telemetry_keys = ['powerButton', 'autoSwitch', 'co2RelaisSw', 'co2HeatingRelaySw', 'pumpRelaySw', 'calculatedFlowRate', 'waterLevelHeight_telem', 'measuredTurbidity_telem',
+telemetry_keys = ['runtime_tracker','powerButton', 'autoSwitch', 'co2RelaisSw', 'co2HeatingRelaySw', 'pumpRelaySw', 'calculatedFlowRate', 'waterLevelHeight_telem', 'measuredTurbidity_telem',
                   'co2RelaisSwSig', 'co2HeatingRelaySwSig', 'pumpRelaySwSig', 'measuredPHValue_telem', 'temperaturPHSens_telem', 'gpsTimestamp', 'messuredRadar_Air_telem', 
                   'countdownPHHigh', 'countdownPHLow', 'flow_rate_l_min', 'flow_rate_l_h', 'flow_rate_m3_min', 'gpsLatitude', 'gpsLongitude', 'gpsHeight', 'ph_low_delay_start_time', 
                   'ph_high_delay_duration', 'minimumPHVal', 'maximumPHVal', 'tempTruebSens', 'calibratePH']
