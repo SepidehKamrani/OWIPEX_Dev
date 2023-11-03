@@ -351,7 +351,7 @@ def main():
             if autoSwitch:
                 print("automode ON", autoSwitch)
 
-                if minimumPHValueStop < measuredPHValue_telem:
+                if minimumPHValueStop > measuredPHValue_telem:
                     powerButton = False
 
                 if measuredPHValue_telem > maximumPHVal:
