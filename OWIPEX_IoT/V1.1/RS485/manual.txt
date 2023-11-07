@@ -1,3 +1,0 @@
-compileren
-
-g++ -o sensor_reader sensor_reader.cpp -lmodbus -lpqxx -std=c++17
