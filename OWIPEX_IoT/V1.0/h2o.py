@@ -365,7 +365,7 @@ def main():
                     elif time.time() - ph_high_delay_start_time >= ph_high_delay_duration:
                         autoSwitch = False
                         powerButton = False
-                        ph_high_delay_start_time = None
+        
                     countdownPHHigh = ph_high_delay_duration - (time.time() - ph_high_delay_start_time)
                 else:
                     ph_high_delay_start_time = None
