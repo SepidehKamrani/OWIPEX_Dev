@@ -365,7 +365,7 @@ def main():
                     elif time.time() - ph_high_delay_start_time >= ph_high_delay_duration:
                         autoSwitch = False
                         powerButton = False
-        
+                        countdownPHHigh = ph_high_delay_duration
                     countdownPHHigh = ph_high_delay_duration - (time.time() - ph_high_delay_start_time)
                 else:
                     ph_high_delay_start_time = None
@@ -379,6 +379,7 @@ def main():
                     elif time.time() - ph_low_delay_start_time >= ph_low_delay_duration:
                         autoSwitch = False
                         powerButton = False
+                        countdownPHLow = ph_low_delay_duration
                     countdownPHLow = ph_low_delay_duration - (time.time() - ph_low_delay_start_time)
                 else:
                     ph_low_delay_start_time = None
@@ -390,13 +391,13 @@ def main():
                     co2HeatingRelaySw = False
             else:
                 print("automode OFF", autoSwitch)
-                pumpRelaySw = False
-                co2RelaisSw = False
-                co2HeatingRelaySw = False
+                #pumpRelaySw = False
+                #co2RelaisSw = False
+                #co2HeatingRelaySw = False
                 ph_low_delay_start_time = None
                 ph_high_delay_start_time = None
-                countdownPHHigh = ph_high_delay_duration
-                countdownPHLow = ph_low_delay_duration  
+                
+                  
                 
         else:
             print("Power Switch OFF.", powerButton)
